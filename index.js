@@ -1,13 +1,14 @@
 import {SvgPlus, SquidlyApp} from "https://session-app.squidly.com.au/src/Apps/app-class.js"
 
-class MainWindow extends SvgPlus {
-    constructor(){
+class BedroomWindow extends SvgPlus {
+    constructor(editable, app){
         super ("div");
+        this.app = app;
         this.styles = {
             "position":  "absolute"
         }
-        this.innerHTML = "hello";
-        this.createChild("img", {src: "http://127.0.0.1:5502/icon.png", styles: {width: "100%", height: "100%"}});
+        // this.innerHTML = "hello";
+        this.createChild("img", {src: "http://127.0.0.1:5502/images/icon.png", styles: {width: "100%", height: "100%"}});
     }
 
 }
@@ -16,7 +17,7 @@ export default class testApp extends SquidlyApp {
     constructor(isSender, initializer){
         super(isSender, initializer);
 
-        this.window = new MainWindow(isSender, this);
+        this.window = new BedroomWindow(isSender, this);
     }
 
     getMainWindow(){
