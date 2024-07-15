@@ -17,9 +17,16 @@ class MainWindow extends SvgPlus {
         }
 
         let audio = this.createChild("audio", {src: "http://127.0.0.1:5502/sounds/home.mp3"});
-
+        
+        this.mainDiv = this;
         let homeDiv = this.createChild("div", {styles: {position: "relative"}});
-        let volumeButton = new VolumeButton(audio); // Some sort of toolbar?
+        let volumeButton = new VolumeButton(audio, app); // Some sort of toolbar?
+        volumeButton.styles = {
+            position: "absolute",
+            top: "-6%",
+            right: "3%"
+        }
+        volumeButton.props = {class: "volume-button"};
         homeDiv.appendChild(volumeButton);
 
         let house = this.createChild("img", {src: "http://127.0.0.1:5502/images/house.png"}); // To stack properly, have to use media queries, fixed size for house or cover the windows completely  
@@ -37,6 +44,7 @@ class MainWindow extends SvgPlus {
         homeDiv.appendChild(house);
         homeDiv.appendChild(bedroom);
         app.set("room", "home"); // Reload goes to home page
+        homeDiv.styles = {display: "block"};
 
         bedroom.addEventListener('mouseover', () => {
             bedroom.styles = {cursor: "pointer"};
@@ -47,10 +55,22 @@ class MainWindow extends SvgPlus {
         
         app.onValue("room", (value) => { // Triggers once immediately after the listener is attached, to provide the current value of the data
             if (value === "home") {
-                homeDiv.styles = {display: "block"}
+                homeDiv.styles = {display: "block"};
+                this.levelScreen = document.getElementById('level-screen');
+                if (this.levelScreen) {
+                    this.levelScreen.styles = {display: "none"};
+                }
             }
             else if (value === "levels") {
                 homeDiv.styles = {display: "none"};
+
+                this.levelScreen = document.getElementById('level-screen');
+                if (!this.levelScreen) {
+                    this.levelScreen = new LevelScreen(audio, app);
+                    this.mainDiv.appendChild(this.levelScreen);
+                } else {
+                    this.levelScreen.styles = {display: "block"};
+                }
             }
         });
 
@@ -105,16 +125,21 @@ class ProgressBar extends SvgPlus {
 }
 
 class VolumeButton extends SvgPlus {
-    constructor(audio) {
+    constructor(audio, app) {
         super("img");
+        this.app = app;
 
-        this.props = {src: "http://127.0.0.1:5502/images/volume-mute.png"};
+        if (this.getMuted()) {
+            this.props = {src: "http://127.0.0.1:5502/images/volume-mute.png"};
+        } else {
+            this.props = {src: "http://127.0.0.1:5502/images/volume.png"};
+        }
+    
         this.styles = {
-            position: "absolute",
+            position: "relative",
             width: "64px", 
             height: "64px",
-            top: "-6%",
-            right: "3%"
+            "margin-bottom": "10px"
         }
 
         this.addEventListener('click', function() {
@@ -136,6 +161,88 @@ class VolumeButton extends SvgPlus {
         this.addEventListener('mouseout', () => {
             this.styles = {cursor: "auto"};
         })
+    }
+
+    async getMuted() {
+        let isMuted = await this.app.get("muted");
+        return isMuted;
+    }
+}
+
+class HomeButton extends SvgPlus {
+    constructor(app) {
+        super("img");
+
+        this.props = {src: "http://127.0.0.1:5502/images/home.png"};
+        this.styles = {
+            position: "relative",
+            width: "64px", 
+            height: "64px",
+            "margin-bottom": "10px",
+            "margin-right": "10px"
+        }
+
+        this.addEventListener('mouseover', () => {
+            this.styles = {cursor: "pointer"};
+        })
+        this.addEventListener('mouseout', () => {
+            this.styles = {cursor: "auto"};
+        })
+        this.addEventListener('click', () => {
+            app.set("room", "home");
+        })
+    }
+}
+
+class LevelScreen extends SvgPlus {
+    constructor(audio, app, volumeButton) {
+        super("div");
+        
+        this.props = {id: "level-screen"};
+
+        let buttonRow = this.createChild("div");
+        let volButton = new VolumeButton(audio, app);
+        volButton.props = {class: "volume-button"};
+        buttonRow.appendChild(new HomeButton(app));
+        buttonRow.appendChild(volButton);
+
+        this.gamesDiv = this.createChild("div", {
+            styles: {
+                display: "grid",
+                "grid-template-columns": "repeat(3, 500px)",
+                gap: "50px",
+                "justify-content": "center"
+            }
+        });
+
+        this.createImage("http://127.0.0.1:5502/images/standard.png", "Standard");
+        this.createImage("http://127.0.0.1:5502/images/birthday.png", "Birthday");
+        this.createImage("http://127.0.0.1:5502/images/halloween.png", "Halloween");
+        this.createImage("http://127.0.0.1:5502/images/christmas.png", "Christmas");
+    }
+
+    createImage(path, game) {
+        let imageDiv = this.gamesDiv.createChild("div");
+        imageDiv.createChild("img", {
+            src: path,
+            styles: {
+                width: "500px",
+                height: "auto",
+                border: "solid 8px #466596"
+            }
+        })
+
+        let name = imageDiv.createChild("p", {
+            styles: {
+                "font-family": "Arial, sans-serif",
+                "font-size": "32px",
+                "font-weight": "bold",
+                "text-align": "center",
+                "margin-top": "20px",
+                "margin-bottom": "0"
+            }    
+        });
+        name.textContent = game;
     }
 }
 
