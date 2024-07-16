@@ -34,7 +34,7 @@ class BedroomWindow extends SvgPlus {
         // this.state = "play";
 
         this.singleSelectedItem = "";
-        
+        app.set("singleSelectedItem", null);
 
         // this config should be stored in the database along with this background image, now it is fixed
          // add url
@@ -63,6 +63,11 @@ class BedroomWindow extends SvgPlus {
                 
                 
                 // this.singleSelectedItem = singleSelectedItem;
+            });
+            app.onValue("prompt", (prompt) => {
+                if (this.promptWindow) {
+                    this.promptWindow.textContent = prompt;
+                }
             });
         }
             
@@ -155,6 +160,7 @@ class BedroomWindow extends SvgPlus {
                         itemImg.addEventListener("click", () => {
                             // record the single selected item and move to the validation state
                             if (item === this.currentItem){
+                                // set the prompt to the database
                                 // console.log("print out the correct items right now");
                                 // console.log(this.correctItems);
                                 console.log("correct item: ");
@@ -165,21 +171,33 @@ class BedroomWindow extends SvgPlus {
                                 this.fadeOutEffect(itemImg);
                                 // change the prompt to the next item
                                 // console.log("start doing next item");
-                                if (this.correctItems.length > 0){
+                                if (this.correctItems.length > 1){
                                     this.correctItems.shift();
                                     this.currentItem = this.correctItems[0];
                                     this.promptWindow.textContent = `Select the ${this.currentItem}`;
+                                    this.app.set("prompt", `Select the ${this.currentItem}`);
                                 } 
-                                // else {
-                                //     console.log("end");
-                                //     this.app.set("state", "end");
-                                // }
+                                else {
+                                    console.log("end");
+                                    this.app.set("state", "end");
+                                }
+
                             }
                         });  
                     }
                 }
                 break;
 
+            case "end":
+                // disable all the items
+                this.items.querySelectorAll("img").forEach(item => {
+                    item.style.pointerEvents = "none";
+                });
+                this.promptWindow.textContent = "Congratulations! You have completed the game!";
+                this.app.set("prompt", "Congratulations! You have completed the game!");
+                // this.items.innerHTML = "";
+                // this.createChild("div", {content: "End of the game", styles: {position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", fontSize: "30px"}});
+                break;
         
             default:
                 break;
@@ -213,6 +231,10 @@ class BedroomWindow extends SvgPlus {
 
         let item = this.checkVectorOnItem(average);
         console.log(item);
+        if (item){
+            item.click();
+        }
+        
         // console.log(x, y);
         // this.style.transform = `translate(${x}%, ${y}%)`;
     }
