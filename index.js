@@ -17,7 +17,28 @@ class MainWindow extends SvgPlus {
         }
 
         let audio = this.createChild("audio", {src: "http://127.0.0.1:5502/sounds/home.mp3"});
-        
+        app.set("muted", true);
+
+        app.onValue("muted", (value) => {
+            let volumeButtons = document.querySelectorAll('.volume-button');
+            if (value) {
+                // Mute logic
+                volumeButtons.forEach((button) => {
+                    button.props = {src: "http://127.0.0.1:5502/images/volume-mute.png"}
+                })
+                audio.muted = true;
+            } else {
+                // Unmute logic
+                volumeButtons.forEach((button) => {
+                    button.props = {src: "http://127.0.0.1:5502/images/volume.png"}
+                })
+                audio.muted = false;
+                audio.load();
+                audio.loop = true;
+                audio.play();
+            }
+        });
+
         this.mainDiv = this;
         let homeDiv = this.createChild("div", {styles: {position: "relative"}});
         let volumeButton = new VolumeButton(audio, app); // Some sort of toolbar?
@@ -142,16 +163,22 @@ class VolumeButton extends SvgPlus {
             "margin-bottom": "10px"
         }
 
-        this.addEventListener('click', function() {
-            if (audio.muted) {
-                this.src = "http://127.0.0.1:5502/images/volume.png";
-                audio.muted = false;
-                audio.load();
-                audio.loop = true;
-                audio.play();
+        this.addEventListener('click', async() => {
+            // if (audio.muted) {
+            //     this.src = "http://127.0.0.1:5502/images/volume.png";
+            //     audio.muted = false;
+            //     audio.load();
+            //     audio.loop = true;
+            //     audio.play();
+            // } else {
+            //     this.src = "http://127.0.0.1:5502/images/volume-mute.png";
+            //     audio.muted = true;
+            // }
+            
+            if (await this.getMuted()) {
+                app.set("muted", false);
             } else {
-                this.src = "http://127.0.0.1:5502/images/volume-mute.png";
-                audio.muted = true;
+                app.set("muted", true);
             }
         })
 
