@@ -99,18 +99,18 @@ class BedroomWindow extends SvgPlus {
 
         this.styles = {
             "position": "absolute",
-            "display": "flex", // Use Flexbox
+            "display": "flex",
             "justify-content": "center", // Center horizontally
             "align-items": "center", // Center vertically
-            "width": "100%", // Ensure the parent has a defined width
-            "height": "100%", // Ensure the parent has a defined height
+            "width": "90%", 
+            "height": "90%",
             "top": "50%",
             "left": "50%",
             "transform": "translate(-50%, -50%)"
         }
 
         // create background image for the game window: maybe randomize the bedroom image generation later
-        this.background = this.createChild("img", {src: "http://127.0.0.1:5502/images/room-interior.png", styles: {position: "relative", width: "100%", height: "100%"}});
+        this.background = this.createChild("img", {src: "http://127.0.0.1:5502/images/room-interior.png", styles: {position: "relative", width: "100%", height: "100%", "object-fit": "contain"}});
 
         this.promptWindow = this.createChild("div", {styles: {position: "absolute", top: "0%", left: "50%", transform: "translateX(-50%)", "font-size": "30px"}});
 
