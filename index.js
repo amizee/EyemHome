@@ -1,15 +1,5 @@
 import {SvgPlus, SquidlyApp} from "https://session-app.squidly.com.au/src/Apps/app-class.js"
 
-
-
-// const itemPositions = {
-//     "teddybear": {"top":"53%", "left": "47%"}, 
-//     "bag": {"top":"80%", "left": "73%"}, 
-//     "books": {"top":"53%", "left": "27%"}, 
-//     "clothes": {"top":"43%", "left": "70%"}, 
-//     "clock": {"top":"20%", "left": "57%"}
-// };
-
 const itemPositions = [
     {"top":"53%", "left": "47%", "name":"teddybear"}, 
     {"top":"80%", "left": "73%", "name":"bag"}, 
@@ -27,7 +17,7 @@ async function waitFrame() {
 }
 
 class Item extends SvgPlus {
-    constructor(item){
+    constructor(item) {
         super("img");
         this.props = {
             name: item.name, 
@@ -42,8 +32,9 @@ class Item extends SvgPlus {
         this.progress = 0;
         this.animate();
     }
-    async animate(){
-        while (true){
+
+    async animate() {
+        while (true) {
             await waitFrame();
             if (!this.hover) {
                 this.progress -= 0.01;
@@ -53,16 +44,15 @@ class Item extends SvgPlus {
         }
     }
 
-    set hover(value){
+    set hover(value) {
         this._hover = value;
     }
 
-    get hover(){
+    get hover() {
         return this._hover;
     }
 
-
-    set progress(value){
+    set progress(value) {
         if (value < 0){
             value = 0;
         } else if (value > 1){
@@ -77,40 +67,35 @@ class Item extends SvgPlus {
         // update wheel
     }
 
-    get progress(){ 
+    get progress() { 
         return this._progress;
-    
     }
-
-
 }
 
 class BedroomWindow extends SvgPlus {
-    constructor(editable, app){
+    constructor(editable, app) {
         super ("div");
-        window.addEventListener("mousemove", (e) => {
+         ntListener("mousemove", (e) => {
             this.eyePosition = {x: e.clientX, y: e.clientY};
-            
         });
+
         this.app = app;
-
-
         this.eyebuffer = [];
 
         this.styles = {
             "position": "absolute",
-            "display": "flex", // Use Flexbox
+            "display": "flex",
             "justify-content": "center", // Center horizontally
             "align-items": "center", // Center vertically
-            "width": "100%", // Ensure the parent has a defined width
-            "height": "100%", // Ensure the parent has a defined height
+            "width": "100%", 
+            "height": "100%",
             "top": "50%",
             "left": "50%",
             "transform": "translate(-50%, -50%)"
         }
 
         // create background image for the game window: maybe randomize the bedroom image generation later
-        this.background = this.createChild("img", {src: "http://127.0.0.1:5502/images/room-interior.png", styles: {position: "relative", width: "100%", height: "100%"}});
+        this.background = this.createChild("img", {src: "http://127.0.0.1:5502/images/standard.svg", styles: {position: "relative", width: "100%", height: "100%", "object-fit": "contain"}});
 
         this.promptWindow = this.createChild("div", {styles: {position: "absolute", top: "0%", left: "50%", transform: "translateX(-50%)", "font-size": "30px"}});
 
@@ -121,7 +106,7 @@ class BedroomWindow extends SvgPlus {
         this.correctItems = [];
         this.selectedItems = [];
         
-        if (!editable){
+        if (!editable) {
             console.log("participant onValue listener")
             app.onValue("correctItems", (correct_items) =>{
                 console.log("correct items", correct_items);
@@ -153,7 +138,7 @@ class BedroomWindow extends SvgPlus {
         this.updateAspectRatio();
     }
 
-    async updateAspectRatio(){
+    async updateAspectRatio() {
         while (true) {
             let parent = this.offsetParent;
             if (parent){
@@ -198,7 +183,7 @@ class BedroomWindow extends SvgPlus {
         console.log("fade out effect ended");
     }
 
-    set state(params){
+    set state(params) {
         switch (params) {
             case null:
                 this.app.set("state", "setup");
@@ -256,9 +241,9 @@ class BedroomWindow extends SvgPlus {
                 this.app.set("prompt", `Select the ${this.currentItem.toUpperCase()}`);
                 this.promptWindow.textContent = `Select the ${this.currentItem.toUpperCase()}`;
                 // this.promptWindow = this.createChild("div", {content: `Select the ${this.currentItem.toUpperCase()}`, styles: {position: "absolute", top: "0%", left: "50%", transform: "translateX(-50%)", "font-size": "30px"}});
-                for (const item of itemPositions){
+                for (const item of itemPositions) {
                     let itemImg = this.items.createChild(Item, {}, item);
-                    if (!this.editable){
+                    if (!this.editable) {
                         itemImg.addEventListener("click", () => {
                             // correct item selected
                             if (item.name === this.currentItem){
@@ -269,7 +254,7 @@ class BedroomWindow extends SvgPlus {
                                 // fade out the item on the participant's side
                                 this.fadeOutEffect(itemImg);
                                 // change the prompt to the next item
-                                if (this.correctItems.length >= 1){
+                                if (this.correctItems.length >= 1) {
                                     this.correctItems.shift(); // Remove the selected item
                                     if (this.correctItems.length > 0) {
                                         console.log("more items");
@@ -309,7 +294,7 @@ class BedroomWindow extends SvgPlus {
         }
     }
 
-    checkVectorOnItem(vector){
+    checkVectorOnItem(vector) {
         let x = vector.x;
         let y = vector.y;
         let items = this.items.children;
@@ -323,17 +308,16 @@ class BedroomWindow extends SvgPlus {
         return null;
     }
 
-    set eyePosition(vector){
-        
+    set eyePosition(vector) {
+        // console.log(vector);
         // console.log(this.eyebuffer);
-        
 
         let item = this.checkVectorOnItem(vector);
         [...this.items.children].forEach(i => {
             i.hover = false;
         });
         if (item){
-            // console.log(item);
+            console.log(item);
             // item.click();
             item.hover = true;
 
@@ -362,54 +346,46 @@ class MainWindow extends SvgPlus {
         let audio = this.createChild("audio", {src: "http://127.0.0.1:5502/sounds/home.mp3"});
         app.set("muted", true);
 
+        // Create home and volume button on clinician side in the same position every time
         if (isSender) {
             this.buttonRow = this.createChild("div", {
                 styles: {
                     "position": "absolute",
-                    "top": "10px",
-                    "left": "80px",
-                    "margin": "10px",
+                    "top": "0",
+                    "left": "0",
+                    "margin": "10px 10px 0 150px",
                     "z-index": "2"
                 }
             });
-            let homeButton = new HomeButton(app);
-            let volButton = new VolumeButton(audio, app);
-            volButton.props = {class: "volume-button"};
-            this.buttonRow.appendChild(homeButton);
-            this.buttonRow.appendChild(volButton);
-        }
 
-
-        
-
-        
-
-        app.onValue("muted", (value) => {
-            let volumeButtons = document.querySelectorAll('.volume-button');
-            if (value) {
-                // Mute logic
-                volumeButtons.forEach((button) => {
-                    button.props = {src: "http://127.0.0.1:5502/images/volume-mute.png"}
-                })
-                audio.muted = true;
-            } else {
-                // Unmute logic
-                volumeButtons.forEach((button) => {
-                    button.props = {src: "http://127.0.0.1:5502/images/volume.png"}
-                })
-                audio.muted = false;
-                audio.load();
-                audio.loop = true;
-                audio.play();
-            }
-        });
+            this.homeButton = new HomeButton(app);
+            this.volumeButton = new VolumeButton(app);
+            this.buttonRow.appendChild(this.homeButton);
+            this.buttonRow.appendChild(this.volumeButton);
+        }        
 
         this.mainDiv = this;
+        // Home screen
         let homeDiv = this.createChild("div", {styles: {position: "relative"}});
-
-        let house = this.createChild("img", {src: "http://127.0.0.1:5502/images/house.png", styles: {"object-fit": "contain", "width":"100%", "height":"100%"}}); // To stack properly, have to use media queries, fixed size for house or cover the windows completely  
+        let house = this.createChild("img", {
+            src: "http://127.0.0.1:5502/images/house.png", 
+            styles: {
+                "object-fit": "contain", 
+                "width":"100%", 
+                "height":"100%"
+        }});
         let bedroom = this.createChild("img", { 
-            src: "http://127.0.0.1:5502/images/bedroom.png", 
+            src: "http://127.0.0.1:5502/images/SightnSeek.svg", 
+            styles: {
+                position: "absolute",
+                height: "20%",
+                top: "35.5%",
+                right: "33.7%",
+                border: "solid 8px #466596"
+            }
+        });
+        let kitchen = this.createChild("img", { 
+            src: "http://127.0.0.1:5502/images/EyeSpell.svg", 
             styles: {
                 position: "absolute",
                 height: "20%",
@@ -418,11 +394,42 @@ class MainWindow extends SvgPlus {
                 border: "solid 8px #466596"
             }
         });
+        let musicRoom = this.createChild("img", { 
+            src: "http://127.0.0.1:5502/images/PianoTrials.svg", 
+            styles: {
+                position: "absolute",
+                height: "20%",
+                top: "35.5%",
+                right: "9.7%",
+                border: "solid 8px #466596"
+            }
+        });
+        let artRoom = this.createChild("img", { 
+            src: "http://127.0.0.1:5502/images/EyePaint.svg", 
+            styles: {
+                position: "absolute",
+                height: "20%",
+                top: "67%",
+                right: "9.7%",
+                border: "solid 8px #466596"
+            }
+        });
+        let mivin = this.createChild("img", { 
+            src: "http://127.0.0.1:5502/images/mivin.svg", 
+            styles: {
+                position: "absolute",
+                height: "22%",
+                top: "12.2%",
+                right: "21.6%"
+            }
+        });
 
         homeDiv.appendChild(house);
         homeDiv.appendChild(bedroom);
-        app.set("room", "home"); // Reload goes to home page
-        homeDiv.styles = {display: "block"};
+        homeDiv.appendChild(kitchen);
+        homeDiv.appendChild(musicRoom);
+        homeDiv.appendChild(artRoom);
+        homeDiv.appendChild(mivin);
 
         bedroom.addEventListener('mouseover', () => {
             bedroom.styles = {cursor: "pointer"};
@@ -431,31 +438,100 @@ class MainWindow extends SvgPlus {
             bedroom.styles = {cursor: "auto"};
         })
         
+        // Update volume on both sides
+        app.onValue("muted", (value) => {
+            console.log("muted", value);
+            if (value) {
+                // Mute logic
+                if (this.volumeButton) {
+                    this.volumeButton.props = {src: "http://127.0.0.1:5502/images/volume-mute.svg"};
+                }
+                audio.muted = true;
+            } else {
+                // Unmute logic
+                if (this.volumeButton) {
+                    this.volumeButton.props = {src: "http://127.0.0.1:5502/images/volume.svg"};
+                }
+                audio.muted = false;
+                audio.load();
+                audio.loop = true;
+                audio.play();
+            }
+        });
+
         app.onValue("room", (value) => { // Triggers once immediately after the listener is attached, to provide the current value of the data
             if (value === "home") {
-                homeDiv.styles = {display: "block"};
+                // app.set("state", "setup");
+
+                if (audio.src !== "http://127.0.0.1:5502/sounds/home.mp3") { // From SightnSeek to home screen
+                    audio.src = "http://127.0.0.1:5502/sounds/home.mp3";
+                    audio.play();
+                }
+
+                if (isSender) {
+                    if (this.backButton) {
+                        this.backButton.styles = {display: "none"};
+                    }
+                }
+
                 this.levelScreen = document.getElementById('level-screen');
                 if (this.levelScreen) {
                     this.levelScreen.styles = {display: "none"};
                 }
+                if (this.bedroom) {
+                    this.bedroom.styles = {display: "none"};
+                }
+
+                homeDiv.styles = {display: "block"};
             }
             else if (value === "levels") {
+                if (audio.src !== "http://127.0.0.1:5502/sounds/home.mp3") { // From SightnSeek to home screen
+                    audio.src = "http://127.0.0.1:5502/sounds/home.mp3";
+                    audio.play();
+                }
+
                 homeDiv.styles = {display: "none"};
+                if (this.bedroom) {
+                    this.bedroom.styles = {display: "none"};
+                }
+
+                if (isSender) {
+                    if (this.backButton) {
+                        this.backButton.styles = {display: "none"};
+                    }
+                }
 
                 this.levelScreen = document.getElementById('level-screen');
                 if (!this.levelScreen) {
-                    this.levelScreen = new LevelScreen(audio, app);
+                    this.levelScreen = new LevelScreen(app);
                     this.mainDiv.appendChild(this.levelScreen);
                 } else {
                     this.levelScreen.styles = {display: "block"};
                 }
             } else if (value === "game") {
-                this.levelScreen = document.getElementById('level-screen');
+                audio.src = "http://127.0.0.1:5502/sounds/bedroom-background.mp3";
+                audio.load();
+                audio.play();
+                
+                if (isSender) {
+                    if (!this.backButton) {
+                        this.backButton = new BackButton(app);
+                        this.buttonRow.insertBefore(this.backButton, this.buttonRow.firstChild);
+                    } else {
+                        this.backButton.styles = {display: "inline-block"};
+                    }
+                }
+             
                 if (this.levelScreen) {
                     this.levelScreen.styles = {display: "none"};
                 }
-                let bedroom = new BedroomWindow(isSender, app);
-                this.mainDiv.appendChild(bedroom);
+    
+                if (!this.bedroom) {
+                    this.bedroom = new BedroomWindow(isSender, app);
+                    this.mainDiv.appendChild(this.bedroom);
+                } else {
+                    this.bedroom.styles = {display: "block"};
+                }
             }
         });
 
@@ -510,16 +586,10 @@ class ProgressBar extends SvgPlus {
 }
 
 class VolumeButton extends SvgPlus {
-    constructor(audio, app) {
+    constructor(app) {
         super("img");
         this.app = app;
 
-        if (this.getMuted()) {
-            this.props = {src: "http://127.0.0.1:5502/images/volume-mute.png"};
-        } else {
-            this.props = {src: "http://127.0.0.1:5502/images/volume.png"};
-        }
-    
         this.styles = {
             position: "relative",
             width: "64px", 
@@ -553,7 +623,7 @@ class HomeButton extends SvgPlus {
     constructor(app) {
         super("img");
 
-        this.props = {src: "http://127.0.0.1:5502/images/home.png"};
+        this.props = {src: "http://127.0.0.1:5502/images/home.svg"};
         this.styles = {
             position: "relative",
             width: "64px", 
@@ -574,17 +644,44 @@ class HomeButton extends SvgPlus {
     }
 }
 
+class BackButton extends SvgPlus {
+    constructor(app) {
+        super("img");
+
+        this.props = {src: "http://127.0.0.1:5502/images/back.svg"};
+        this.styles = {
+            position: "relative",
+            width: "64px", 
+            height: "64px",
+            "margin-bottom": "10px",
+            "margin-right": "10px"
+        }
+
+        this.addEventListener('mouseover', () => {
+            this.styles = {cursor: "pointer"};
+        })
+        this.addEventListener('mouseout', () => {
+            this.styles = {cursor: "auto"};
+        })
+        this.addEventListener('click', () => {
+            this.styles = {display: "none"};
+            console.log("app set to levels")
+            app.set("room", "levels");
+        })
+    }
+}
+
 class LevelScreen extends SvgPlus {
-    constructor(audio, app) {
+    constructor (app) {
         super("div");
         
-        this.props = {id: "level-screen"};
         this.app = app;
+        this.props = {id: "level-screen"};
         this.styles = {
             "object-fit": "contain",
             "width": "100%",
             "height": "100%",
-            "margin-top": "10%"
+            "margin-top": "15%"
         };
 
         this.gamesDiv = this.createChild("div", {
@@ -596,13 +693,12 @@ class LevelScreen extends SvgPlus {
             }
         });
 
-        this.createImage("http://127.0.0.1:5502/images/standard.png", "Standard");
-        this.createImage("http://127.0.0.1:5502/images/birthday.png", "Birthday");
-        this.createImage("http://127.0.0.1:5502/images/halloween.png", "Halloween");
-        this.createImage("http://127.0.0.1:5502/images/christmas.png", "Christmas");
-        this.updateGridStyles();
+        this.createImage("http://127.0.0.1:5502/images/standard.svg", "Standard");
+        this.createImage("http://127.0.0.1:5502/images/birthday.svg", "Birthday");
+        this.createImage("http://127.0.0.1:5502/images/halloween.svg", "Halloween");
+        this.createImage("http://127.0.0.1:5502/images/christmas.svg", "Christmas");
+
         window.addEventListener('resize', () => {
-            console.log("resize");
             this.updateGridStyles();
         });
     }
@@ -635,17 +731,18 @@ class LevelScreen extends SvgPlus {
         name.textContent = game;
     }
 
-    // Function to update grid styles based on screen size
+    // Make grid scale with screen size
     updateGridStyles() {
         let columns;
         const screenWidth = window.innerWidth;
-        if (screenWidth > 1650) { // Large screens
+
+        if (screenWidth > 1650) { 
             columns = "repeat(3, 500px)";
-        } else if (screenWidth > 1090 && screenWidth <= 1650) { // Medium screens
-            document.getElementById('level-screen').style.marginTop = "20%"; // Change "20%" to your desired value
+        } else if (screenWidth > 1090 && screenWidth <= 1650) { 
+            document.getElementById('level-screen').style.marginTop = "20%"; 
             columns = "repeat(2, 500px)";
-        } else { // Small screens
-            document.getElementById('level-screen').style.marginTop = "30%"; // Change "30%" to your desired value
+        } else {
+            document.getElementById('level-screen').style.marginTop = "30%"; 
             columns = "repeat(1, 500px)";
         }
 
@@ -654,13 +751,13 @@ class LevelScreen extends SvgPlus {
 }
 
 export default class TestApp extends SquidlyApp {
-    constructor(isSender, initializer){
+    constructor(isSender, initializer) {
         super(isSender, initializer);
 
         this.window = new MainWindow(isSender, this);
     }
 
-    setEyeData(vector){
+    setEyeData(vector) {
         this.window.eyePosition = vector;
     }
 
@@ -672,9 +769,13 @@ export default class TestApp extends SquidlyApp {
         return "MyApp";
     }
 
+    static get description() {
+        return "Eye'm'Home";
+    }
+
     static get appIcon() {
         let icon = new SvgPlus("img");
-        icon.props = {src: "http://127.0.0.1:5502/images/icon.png", styles: {width: "100%", height: "100%"}};
+        icon.props = {src: "http://127.0.0.1:5502/images/icon.svg", styles: {width: "100%", height: "100%"}};
         return icon;
     }
 }
