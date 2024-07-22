@@ -75,11 +75,15 @@ class Item extends SvgPlus {
 class BedroomWindow extends SvgPlus {
     constructor(editable, app) {
         super ("div");
-         ntListener("mousemove", (e) => {
+        window.addEventListener("mousemove", (e) => {
+            // console.log("eye position: ", e.clientX, e.clientY);
             this.eyePosition = {x: e.clientX, y: e.clientY};
         });
 
         this.app = app;
+        this.app.set("state", "init");
+
+
         this.eyebuffer = [];
 
         this.styles = {
@@ -101,40 +105,49 @@ class BedroomWindow extends SvgPlus {
 
         this.items = this.createChild("div");
         this.editable = editable;
-        this.singleSelectedItem = "";
-        app.set("singleSelectedItem", null);
         this.correctItems = [];
         this.selectedItems = [];
-        
-        if (!editable) {
-            console.log("participant onValue listener")
-            app.onValue("correctItems", (correct_items) =>{
-                console.log("correct items", correct_items);
-                this.correctItems = correct_items;
-                console.log(this.correctItems);
-            });
-            
-        } else {
-            app.onValue("singleSelectedItem", (singleSelectedItem) => {
-                // get the correct items from the clinician
-                console.log("single selected item");
-                console.log(singleSelectedItem);
-                // fade out the item on clinician's side
-                if (singleSelectedItem) {
-                    this.fadeOutEffect(singleSelectedItem);
-                }
-            });
-            app.onValue("prompt", (prompt) => {
-                console.log("onvalue prompt");
-                if (this.promptWindow) {
-                    this.promptWindow.textContent = prompt;
-                }
-            });
-        }
+        this.itemsOnScreen = [];
 
-        app.onValue("state", (state) => {
-            this.state = state;
+        app.onValue("itemsOnScreen", (itemsOnScreen) => {
+            // compare the value from the database and within the app
+            // if the app has more items, fade out the extra items
+            // in the play state
+            if (itemsOnScreen){
+                if (this.itemsOnScreen.length > itemsOnScreen.length){
+                    // find the item that should be removed
+                    let itemToRemove = this.itemsOnScreen.find(i => !itemsOnScreen.find(j => j.name === i.name));
+                    this.fadeOutEffect(itemToRemove.name);
+                    // remove the item from the correct items as well
+                    // this.app.set("correctItems", this.correctItems.filter(i => i !== itemToRemove.name));
+
+                }
+                this.itemsOnScreen = itemsOnScreen;
+            }
+            
         });
+
+        app.onValue("correctItems", (correctItems) => {
+            console.log("onvalue correctItems");
+            console.log(correctItems);
+            if (this.correctItems){
+                this.correctItems = correctItems;
+            }
+        });
+
+        app.onValue("prompt", (prompt) => {
+            console.log("onvalue prompt");
+            if (this.promptWindow && prompt){ 
+                this.promptWindow.textContent = prompt;
+            }
+        });
+
+        app.onValue("state", async (state) => {
+            // this.state = state;
+            console.log("onvalue state");
+            await this.setStateAsync(state);
+        });
+
         this.updateAspectRatio();
     }
 
@@ -159,14 +172,20 @@ class BedroomWindow extends SvgPlus {
         }
     }
 
+    async getItemsOnScreen(){
+        return await this.app.get("itemsOnScreen");
+    }
+
+    async getCorrectItems(){
+        return await this.app.get("correctItems");
+    }
+
     fadeOutEffect(element) {
         // try {
         //     throw new Error("This is an error");
         // } catch (error) {
         //     console.log(error.stack);
         // }
-        console.log("fade out effect triggered");
-        console.log(element);
         if (typeof element === 'string') {
             element = this.querySelector(`[name=${element}]`);
         }
@@ -180,12 +199,25 @@ class BedroomWindow extends SvgPlus {
             element.style.filter = 'alpha(opacity=' + op * 100 + ")";
             op -= op * 0.1;
         }, 50); // Adjust the interval for speed control
-        console.log("fade out effect ended");
     }
 
-    set state(params) {
+    async setStateAsync(params){
+        let itemsOnScreen = await this.getItemsOnScreen();
+        if (!itemsOnScreen){
+            itemsOnScreen = itemPositions;
+        }
+        this.itemsOnScreen = itemsOnScreen;
+        this.app.set("itemsOnScreen", itemsOnScreen);
         switch (params) {
             case null:
+                this.app.set("state", "init");
+                break;
+            case "init":
+                // set the itemsOnScreen to the database
+                if (this.editable){
+                    this.app.set("itemsOnScreen", itemPositions);
+                }
+                // set the state to setup
                 this.app.set("state", "setup");
                 break;
             case "setup":
@@ -208,7 +240,10 @@ class BedroomWindow extends SvgPlus {
                     }
                     
                 }
-                for (const item of itemPositions) {
+                // now instead of calling the itemPositions, we can call the itemsOnScreen from the database
+                console.log("setup: print the itemsOnScreen", itemsOnScreen);
+                for (const item of itemsOnScreen) {
+
                     let itemImg = this.items.createChild(Item, {}, item);
                     
                     if (this.editable){
@@ -231,47 +266,30 @@ class BedroomWindow extends SvgPlus {
                 break;
 
             case "play":
-                console.log("play: print the correctItems");
-                console.log(this.correctItems);
                 this.items.innerHTML = "";
-                this.currentItem = this.correctItems[0];
-                console.log("first item in the correct item list");
-                console.log(this.correctItems);
-                console.log(this.currentItem);
-                this.app.set("prompt", `Select the ${this.currentItem.toUpperCase()}`);
-                this.promptWindow.textContent = `Select the ${this.currentItem.toUpperCase()}`;
-                // this.promptWindow = this.createChild("div", {content: `Select the ${this.currentItem.toUpperCase()}`, styles: {position: "absolute", top: "0%", left: "50%", transform: "translateX(-50%)", "font-size": "30px"}});
-                for (const item of itemPositions) {
+                this.app.set("prompt", `Select the ${this.correctItems[0].toUpperCase()}`);
+                // no need to set promptWindow here as the prompt is already set in onValue listener
+                // instead of calling the itemPositions, we can call the itemsOnScreen from the database
+                for (const item of this.itemsOnScreen) {
                     let itemImg = this.items.createChild(Item, {}, item);
                     if (!this.editable) {
                         itemImg.addEventListener("click", () => {
-                            // correct item selected
-                            if (item.name === this.currentItem){
-                                console.log("correct item: ");
-                                console.log(this.correctItems);
-                                this.singleSelectedItem = item.name;
-                                this.app.set("singleSelectedItem", this.singleSelectedItem);
-                                // fade out the item on the participant's side
-                                this.fadeOutEffect(itemImg);
-                                // change the prompt to the next item
-                                if (this.correctItems.length >= 1) {
-                                    this.correctItems.shift(); // Remove the selected item
-                                    if (this.correctItems.length > 0) {
-                                        console.log("more items");
-                                        // If there are more items, update the prompt to the next item
-                                        this.currentItem = this.correctItems[0];
-                                        this.promptWindow.textContent = `Select the ${this.currentItem.toUpperCase()}`;
-                                        this.app.set("prompt", `Select the ${this.currentItem.toUpperCase()}`);
-                                    } else {
-                                        // Handle the case when no more items are left to select
-                                        console.log("end");
-                                        this.app.set("state", "end");
-                                    }
-                                }
+                            let currentItem = this.correctItems[0];
+                            if (item.name !== currentItem) {
+                                this.app.set("prompt", `Try again! This is not the ${currentItem.toUpperCase()}`);
                             } else {
-                                // set the prompt to the database
-                                this.app.set("prompt", `Try again! This is not the ${this.currentItem.toUpperCase()}`);
-                                this.promptWindow.textContent = `Try again! This is not the ${this.currentItem.toUpperCase()}`;
+                                // remove the item from the screen
+                                this.app.set("itemsOnScreen", [...this.itemsOnScreen].filter(i => i.name !== item.name));
+                                // remove the item from the correct items
+
+                                this.app.set("correctItems", this.correctItems.slice(1));
+                                // if correct items are empty, set the state to end
+                                if (!this.correctItems){
+                                    this.app.set("state", "end");
+                                } else {
+                                    // update the prompt
+                                    this.app.set("prompt", `Select the ${this.correctItems[0].toUpperCase()}`);
+                                }
                             }
                         });  
                     }
@@ -285,8 +303,6 @@ class BedroomWindow extends SvgPlus {
                 this.items.querySelectorAll("img").forEach(item => {
                     item.style.pointerEvents = "none";
                 });
-                this.promptWindow.textContent = "Congratulations!";
-                // document.getElementsByName("selectButton")[0].style.display = "none";
                 break;
         
             default:
@@ -318,8 +334,8 @@ class BedroomWindow extends SvgPlus {
         });
         if (item){
             console.log(item);
-            // item.click();
-            item.hover = true;
+            item.click();
+            // item.hover = true;
 
         }
         
@@ -758,6 +774,7 @@ export default class TestApp extends SquidlyApp {
     }
 
     setEyeData(vector) {
+        console.log("vector", vector);
         this.window.eyePosition = vector;
     }
 
