@@ -75,7 +75,8 @@ class Item extends SvgPlus {
 class BedroomWindow extends SvgPlus {
     constructor(editable, app) {
         super ("div");
-         ntListener("mousemove", (e) => {
+        window.addEventListener("mousemove", (e) => {
+            // console.log("eye position: ", e.clientX, e.clientY);
             this.eyePosition = {x: e.clientX, y: e.clientY};
         });
 
@@ -333,8 +334,8 @@ class BedroomWindow extends SvgPlus {
         });
         if (item){
             console.log(item);
-            // item.click();
-            item.hover = true;
+            item.click();
+            // item.hover = true;
 
         }
         
@@ -773,6 +774,7 @@ export default class TestApp extends SquidlyApp {
     }
 
     setEyeData(vector) {
+        console.log("vector", vector);
         this.window.eyePosition = vector;
     }
 
