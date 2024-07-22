@@ -1,12 +1,35 @@
 import {SvgPlus, SquidlyApp} from "https://session-app.squidly.com.au/src/Apps/app-class.js"
 
-const itemPositions = [
-    {"top":"53%", "left": "47%", "name":"teddybear"}, 
-    {"top":"80%", "left": "73%", "name":"bag"}, 
-    {"top":"53%", "left": "27%", "name":"books"}, 
-    {"top":"43%", "left": "70%", "name":"clothes"}, 
-    {"top":"20%", "left": "57%", "name":"clock"}
-];
+const itemPositions = { 
+    "Standard": [
+        {"top":"53%", "left": "47%", "name":"teddybear"}, 
+        {"top":"80%", "left": "73%", "name":"bag"}, 
+        {"top":"53%", "left": "27%", "name":"books"}, 
+        {"top":"43%", "left": "70%", "name":"clothes"}, 
+        {"top":"20%", "left": "57%", "name":"clock"}
+    ],
+    "Birthday": [
+        {"top":"53%", "left": "47%", "name":"teddybear"}, 
+        {"top":"80%", "left": "73%", "name":"bag"}, 
+        {"top":"53%", "left": "27%", "name":"books"}, 
+        {"top":"43%", "left": "70%", "name":"clothes"}, 
+        {"top":"20%", "left": "57%", "name":"clock"}
+    ],
+    "Halloween": [
+        {"top":"53%", "left": "47%", "name":"teddybear"}, 
+        {"top":"80%", "left": "73%", "name":"bag"}, 
+        {"top":"53%", "left": "27%", "name":"books"}, 
+        {"top":"43%", "left": "70%", "name":"clothes"}, 
+        {"top":"20%", "left": "57%", "name":"clock"}
+    ],
+    "Christmas": [
+        {"top":"53%", "left": "47%", "name":"teddybear"}, 
+        {"top":"80%", "left": "73%", "name":"bag"}, 
+        {"top":"53%", "left": "27%", "name":"books"}, 
+        {"top":"43%", "left": "70%", "name":"clothes"}, 
+        {"top":"20%", "left": "57%", "name":"clock"}
+    ]
+};
 
 const backgroundAspectRatio = 1077/600;
 
@@ -98,8 +121,17 @@ class BedroomWindow extends SvgPlus {
             "transform": "translate(-50%, -50%)"
         }
 
+        // query the database for the background image
+        app.onValue("level", (level) => {
+            if (level){
+                this.background = this.createChild("img", {src: `http://127.0.0.1:5502/images/${level}.svg`, styles: {position: "relative", width: "100%", height: "100%", "object-fit": "contain", "z-index":"0"}});
+            } else {
+                this.background = this.createChild("img", {src: "http://127.0.0.1:5502/images/standard.svg", styles: {position: "relative", width: "100%", height: "100%", "object-fit": "contain", "z-index":"0"}});
+            }
+        });
+
         // create background image for the game window: maybe randomize the bedroom image generation later
-        this.background = this.createChild("img", {src: "http://127.0.0.1:5502/images/standard.svg", styles: {position: "relative", width: "100%", height: "100%", "object-fit": "contain"}});
+        // this.background = this.createChild("img", {src: "http://127.0.0.1:5502/images/standard.svg", styles: {position: "relative", width: "100%", height: "100%", "object-fit": "contain"}});
 
         this.promptWindow = this.createChild("div", {styles: {position: "absolute", top: "0%", left: "50%", transform: "translateX(-50%)", "font-size": "30px"}});
 
@@ -203,8 +235,11 @@ class BedroomWindow extends SvgPlus {
 
     async setStateAsync(params){
         let itemsOnScreen = await this.getItemsOnScreen();
+        console.log("setStateAsync: print the itemsOnScreen", itemsOnScreen);
         if (!itemsOnScreen){
-            itemsOnScreen = itemPositions;
+            console.log("itemsOnScreen is null");
+            itemsOnScreen = itemPositions["Standard"];
+            console.log("itemsOnScreen after getting null value", itemsOnScreen);
         }
         this.itemsOnScreen = itemsOnScreen;
         this.app.set("itemsOnScreen", itemsOnScreen);
