@@ -9,25 +9,30 @@ const itemPositions = {
         {"top":"20%", "left": "57%", "name":"clock"}
     ],
     "Birthday": [
-        {"top":"53%", "left": "47%", "name":"teddybear"}, 
-        {"top":"80%", "left": "73%", "name":"bag"}, 
+        {"top":"53%", "left": "47%", "name":"teddybear"},
+        {"top":"20%", "left": "47%", "name":"confetti-ball"},
+        {"top":"80%", "left": "73%", "name":"gift"}, 
         {"top":"53%", "left": "27%", "name":"books"}, 
         {"top":"43%", "left": "70%", "name":"clothes"}, 
         {"top":"20%", "left": "57%", "name":"clock"}
     ],
     "Halloween": [
-        {"top":"53%", "left": "47%", "name":"teddybear"}, 
-        {"top":"80%", "left": "73%", "name":"bag"}, 
-        {"top":"53%", "left": "27%", "name":"books"}, 
-        {"top":"43%", "left": "70%", "name":"clothes"}, 
-        {"top":"20%", "left": "57%", "name":"clock"}
+        {"top":"53%", "left": "47%", "name":"blackcat"}, 
+        {"top":"80%", "left": "60%", "name":"Halloween Tree"}, 
+        {"top":"49%", "left": "18%", "name":"witchhat"}, 
+        {"top":"65%", "left": "80%", "name":"Broom"}, 
+        {"top":"20%", "left": "57%", "name":"bat"},
+        {"top":"80%", "left": "27%", "name":"Pumpkin"}, 
+        {"top":"65%", "left": "25%", "name":"Candies"}
     ],
     "Christmas": [
-        {"top":"53%", "left": "47%", "name":"teddybear"}, 
-        {"top":"80%", "left": "73%", "name":"bag"}, 
-        {"top":"53%", "left": "27%", "name":"books"}, 
-        {"top":"43%", "left": "70%", "name":"clothes"}, 
-        {"top":"20%", "left": "57%", "name":"clock"}
+        {"top":"53%", "left": "47%", "name":"santaclaus"}, 
+        {"top":"80%", "left": "73%", "name":"elf"}, 
+        {"top":"53%", "left": "27%", "name":"chicken"}, 
+        {"top":"43%", "left": "70%", "name":"gingerbread"}, 
+        {"top":"20%", "left": "37%", "name":"christmas socks"},
+        {"top":"73%", "left": "27%", "name":"snowglobe"},
+        {"top":"80%", "left": "15%", "name":"star"},
     ]
 };
 
@@ -44,7 +49,7 @@ class Item extends SvgPlus {
         super("img");
         this.props = {
             name: item.name, 
-            src: `http://127.0.0.1:5502/images/${item.name}.png`, 
+            src: `http://127.0.0.1:5502/images/${item.name}.svg`, 
             styles: {
                 position: "absolute", 
                 top: item.top, 
@@ -124,9 +129,22 @@ class BedroomWindow extends SvgPlus {
         // query the database for the background image
         app.onValue("level", (level) => {
             if (level){
-                this.background = this.createChild("img", {src: `http://127.0.0.1:5502/images/${level}.svg`, styles: {position: "relative", width: "100%", height: "100%", "object-fit": "contain", "z-index":"0"}});
+                console.log("level: ", level);
+                this.level = level;
+                if (!this.background){
+                    this.background = this.createChild("img", {src: `http://127.0.0.1:5502/images/${level}.svg`, styles: {position: "relative", width: "100%", height: "100%", "object-fit": "contain", "z-index":"-1"}});
+                } else {
+                    this.background.src = `http://127.0.0.1:5502/images/${level}.svg`;
+                }
+                
+                
             } else {
-                this.background = this.createChild("img", {src: "http://127.0.0.1:5502/images/standard.svg", styles: {position: "relative", width: "100%", height: "100%", "object-fit": "contain", "z-index":"0"}});
+                this.level = "Standard";
+                if (!this.background){
+                    this.background = this.createChild("img", {src: `http://127.0.0.1:5502/images/standard.svg`, styles: {position: "relative", width: "100%", height: "100%", "object-fit": "contain", "z-index":"-1"}});
+                } else {
+                    this.background.src = `http://127.0.0.1:5502/images/standard.svg`;
+                }
             }
         });
 
@@ -155,6 +173,8 @@ class BedroomWindow extends SvgPlus {
 
                 }
                 this.itemsOnScreen = itemsOnScreen;
+            } else {
+                this.itemsOnScreen = itemPositions[this.level];
             }
             
         });
@@ -191,13 +211,21 @@ class BedroomWindow extends SvgPlus {
                 if (aspectRatio < backgroundAspectRatio){
                     this.style.width = "100%";
                     this.style.height = "auto";
-                    this.background.style.width = "100%";
-                    this.background.style.height = "auto";
+                    if (this.background){
+                        this.background.style.width = "100%";
+                        this.background.style.height = "auto";
+                    }
+                    // this.background.style.width = "100%";
+                    // this.background.style.height = "auto";
                 } else {
                     this.style.width = "auto";
                     this.style.height = "100%";
-                    this.background.style.width = "auto";
-                    this.background.style.height = "100%";
+                    if (this.background){
+                        this.background.style.width = "auto";
+                        this.background.style.height = "100%";
+                    }
+                    // this.background.style.width = "auto";
+                    // this.background.style.height = "100%";
                 }
             }
             await waitFrame();
@@ -238,7 +266,8 @@ class BedroomWindow extends SvgPlus {
         console.log("setStateAsync: print the itemsOnScreen", itemsOnScreen);
         if (!itemsOnScreen){
             console.log("itemsOnScreen is null");
-            itemsOnScreen = itemPositions["Standard"];
+            console.log("level", this.level);
+            itemsOnScreen = itemPositions[this.level];
             console.log("itemsOnScreen after getting null value", itemsOnScreen);
         }
         this.itemsOnScreen = itemsOnScreen;
@@ -250,7 +279,7 @@ class BedroomWindow extends SvgPlus {
             case "init":
                 // set the itemsOnScreen to the database
                 if (this.editable){
-                    this.app.set("itemsOnScreen", itemPositions);
+                    this.app.set("itemsOnScreen", this.itemsOnScreen);
                 }
                 // set the state to setup
                 this.app.set("state", "setup");
@@ -368,9 +397,9 @@ class BedroomWindow extends SvgPlus {
             i.hover = false;
         });
         if (item){
-            console.log(item);
-            item.click();
-            // item.hover = true;
+            // console.log(item);
+            // item.click();
+            item.hover = true;
 
         }
         
@@ -767,6 +796,12 @@ class LevelScreen extends SvgPlus {
 
         image.addEventListener('click', () => {
             this.app.set("room", "game");
+            this.app.set("level", game);
+            this.app.set("itemsOnScreen", null);
+            this.app.set("itemsOnScreen", itemPositions[game]);
+            this.app.set("state", "init");
+            this.app.set("prompt", "");
+            console.log("clear itemsOnScreen");
         });
 
         let name = imageDiv.createChild("p", {
