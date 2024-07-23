@@ -65,9 +65,9 @@ class Item extends SvgPlus {
         while (true) {
             await waitFrame();
             if (!this.hover) {
-                this.progress -= 0.01;
+                this.progress -= 0.003;
             } else {
-                this.progress += 0.01;
+                this.progress += 0.02;
             }
         }
     }
@@ -111,6 +111,7 @@ class BedroomWindow extends SvgPlus {
         this.app = app;
         this.effect = effect;
         this.app.set("state", "init");
+
 
         this.eyebuffer = [];
 
@@ -188,6 +189,7 @@ class BedroomWindow extends SvgPlus {
         });
 
         app.onValue("prompt", (prompt) => {
+            console.log("onvalue prompt");
             console.log("onvalue prompt", prompt);
             if (this.promptWindow) { 
                 if (typeof prompt !== "string") prompt = "";
@@ -278,13 +280,17 @@ class BedroomWindow extends SvgPlus {
                 if (this.editable){
                     this.app.set("itemsOnScreen", this.itemsOnScreen);
                 }
+                // // clears everything
+                // this.app.set("correctItems", []);
+                // this.app.set("prompt", "");
+                // this.app.set("itemsOnScreen", itemPositions[this.level]);
                 // set the state to setup
                 this.app.set("state", "setup");
+                
                 break;
             case "setup":
                 this.correctItems = [];
                 this.items.innerHTML = "";
-                this.app.set("prompt", "");
                 if (this.editable){
                     let selButton = document.getElementsByName("selectButton");
                     if (selButton.length > 0){
@@ -299,7 +305,6 @@ class BedroomWindow extends SvgPlus {
                             this.app.set("correctItems", this.correctItems);
                             this.app.set("state", "play");
                         });
-                
                         this.createChild("button", {name: "resetButton", content: "&#8634;", styles: {position: "absolute", "font-size": "20px", bottom: "15%", left: "58%", transform: "translateX(-50%)", padding: "9px 15px", background: "#FFCC00", color: "white", border: "2px solid #CC9900", "border-radius": "5px"}}).addEventListener("click", () => {
                             console.log("reset");
                             this.app.set("prompt", "");
@@ -308,6 +313,7 @@ class BedroomWindow extends SvgPlus {
                             this.app.set("state", "init");
                         });
                     }
+                    
                 }
                 // now instead of calling the itemPositions, we can call the itemsOnScreen from the database
                 console.log("setup: print the itemsOnScreen", itemsOnScreen);
@@ -400,6 +406,7 @@ class BedroomWindow extends SvgPlus {
         // console.log(this.eyebuffer);
 
         let item = this.checkVectorOnItem(vector);
+        console.log("item: ", item);
         [...this.items.children].forEach(i => {
             i.hover = false;
         });
@@ -455,14 +462,16 @@ class MainWindow extends SvgPlus {
         this.mainDiv = this;
         // Home screen
         let homeDiv = this.createChild("div", {styles: {position: "relative"}});
-        let house = this.createChild("img", {
+        this.homeDiv = homeDiv;
+        let house = homeDiv.createChild("img", {
             src: "http://127.0.0.1:5502/images/house.png", 
             styles: {
                 "object-fit": "contain", 
                 "width":"100%", 
                 "height":"100%"
         }});
-        let bedroom = this.createChild("img", { 
+        this.house = house;
+        let bedroom = homeDiv.createChild("img", { 
             src: "http://127.0.0.1:5502/images/SightnSeek.svg", 
             styles: {
                 position: "absolute",
@@ -472,7 +481,7 @@ class MainWindow extends SvgPlus {
                 border: "solid 8px #466596"
             }
         });
-        let kitchen = this.createChild("img", { 
+        let kitchen = homeDiv.createChild("img", { 
             src: "http://127.0.0.1:5502/images/EyeSpell.svg", 
             styles: {
                 position: "absolute",
@@ -482,7 +491,7 @@ class MainWindow extends SvgPlus {
                 border: "solid 8px #466596"
             }
         });
-        let musicRoom = this.createChild("img", { 
+        let musicRoom = homeDiv.createChild("img", { 
             src: "http://127.0.0.1:5502/images/PianoTrials.svg", 
             styles: {
                 position: "absolute",
@@ -492,7 +501,7 @@ class MainWindow extends SvgPlus {
                 border: "solid 8px #466596"
             }
         });
-        let artRoom = this.createChild("img", { 
+        let artRoom = homeDiv.createChild("img", { 
             src: "http://127.0.0.1:5502/images/EyePaint.svg", 
             styles: {
                 position: "absolute",
@@ -502,7 +511,7 @@ class MainWindow extends SvgPlus {
                 border: "solid 8px #466596"
             }
         });
-        let mivin = this.createChild("img", { 
+        let mivin = homeDiv.createChild("img", { 
             src: "http://127.0.0.1:5502/images/mivin.svg", 
             styles: {
                 position: "absolute",
@@ -512,21 +521,12 @@ class MainWindow extends SvgPlus {
             }
         });
 
-        homeDiv.appendChild(house);
-        homeDiv.appendChild(bedroom);
-        homeDiv.appendChild(kitchen);
-        homeDiv.appendChild(musicRoom);
-        homeDiv.appendChild(artRoom);
-        homeDiv.appendChild(mivin);
-        
-        if (isSender) {
-            bedroom.addEventListener('mouseover', () => {
-                bedroom.styles = {cursor: "pointer"};
-            })
-            bedroom.addEventListener('mouseout', () => {
-                bedroom.styles = {cursor: "auto"};
-            })
-        }
+        bedroom.addEventListener('mouseover', () => {
+            bedroom.styles = {cursor: "pointer"};
+        })
+        bedroom.addEventListener('mouseout', () => {
+            bedroom.styles = {cursor: "auto"};
+        })
         
         // Update volume on both sides
         app.onValue("muted", (value) => {
@@ -629,24 +629,57 @@ class MainWindow extends SvgPlus {
         });
 
         let hoverTimer;
-        if (isSender) {
-            bedroom.addEventListener('mouseenter', function(e) {
-                let progressBar = new ProgressBar(e);
-                progressBar.props = {class: "progress-bar"};
-                document.body.appendChild(progressBar);
-                progressBar.animate();
-                hoverTimer = setTimeout(() => {
-                    app.set("room", "levels");
-                }, 1000);
-            });
-    
-            bedroom.addEventListener('mouseleave', function() {
-                let progressBars = document.querySelectorAll('.progress-bar');
-                for (let i = 0; i < progressBars.length; i++) {
-                    progressBars[i].remove();
-                };
-                clearTimeout(hoverTimer);
-            });
+        bedroom.addEventListener('mouseenter', function(e) {
+            let progressBar = new ProgressBar(e);
+            progressBar.props = {class: "progress-bar"};
+            document.body.appendChild(progressBar);
+            progressBar.animate();
+            hoverTimer = setTimeout(() => {
+                app.set("room", "levels");
+            }, 1000);
+        });
+
+        bedroom.addEventListener('mouseleave', function() {
+            let progressBars = document.querySelectorAll('.progress-bar');
+            for (let i = 0; i < progressBars.length; i++) {
+                progressBars[i].remove();
+            };
+            clearTimeout(hoverTimer);
+        });
+
+        this.updateAspectRatio();
+    }
+
+    set eyePosition(vector){
+        if (this.bedroom){
+            this.bedroom.eyePosition = vector;
+        }
+    }
+
+    async updateAspectRatio() {
+        while (true) {
+            let parent = this.offsetParent;
+            if (parent){
+                let backgroundAspectRatio2 = this.house.naturalWidth / this.house.naturalHeight;
+
+                let aspectRatio = parent.offsetWidth / parent.offsetHeight;
+                if (aspectRatio < backgroundAspectRatio2){
+                    this.house.style.width = "100%";
+                    this.house.style.height = "auto";
+                    this.homeDiv.style.width = "100%";
+                    this.homeDiv.style.height = "auto";
+                    // this.background.style.width = "100%";
+                    // this.background.style.height = "auto";
+                } else {
+                    this.homeDiv.style.width = "auto";
+                    this.homeDiv.style.height = "100%";
+                    this.house.style.width = "auto";
+                    this.house.style.height = "100%";
+                    // this.background.style.width = "auto";
+                    // this.background.style.height = "100%";
+                }
+            }
+            await waitFrame();
         }
     }    
 }
@@ -777,15 +810,18 @@ class LevelScreen extends SvgPlus {
             "object-fit": "contain",
             "width": "100%",
             "height": "100%",
-            "margin-top": "15%"
+            "margin-top": "15%",
+            "overflow": "scroll"
         };
 
         this.gamesDiv = this.createChild("div", {
             styles: {
                 display: "grid",
-                "grid-template-columns": "repeat(3, 500px)",
+                "grid-template-columns": "repeat(3, 1fr)",
                 gap: "50px",
-                "justify-content": "center"
+                "justify-content": "center",
+                "margin-left": "10em",
+                "margin-right": "10em"
             }
         });
 
@@ -804,12 +840,12 @@ class LevelScreen extends SvgPlus {
         let image = imageDiv.createChild("img", {
             src: path,
             styles: {
-                width: "500px",
+                width: "100%",
                 height: "auto",
                 border: "solid 8px #466596"
             }
         })
-        
+
         if (this.isSender) {
             image.addEventListener('click', () => {
                 this.app.set("room", "game");
@@ -847,13 +883,13 @@ class LevelScreen extends SvgPlus {
         const screenWidth = window.innerWidth;
 
         if (screenWidth > 1650) { 
-            columns = "repeat(3, 500px)";
+            columns = "repeat(3, 1fr)";
         } else if (screenWidth > 1090 && screenWidth <= 1650) { 
             document.getElementById('level-screen').style.marginTop = "20%"; 
-            columns = "repeat(2, 500px)";
+            columns = "repeat(2, 1fr)";
         } else {
             document.getElementById('level-screen').style.marginTop = "30%"; 
-            columns = "repeat(1, 500px)";
+            columns = "repeat(1, 1fr)";
         }
 
         this.gamesDiv.style.gridTemplateColumns = columns;
@@ -867,8 +903,8 @@ export default class TestApp extends SquidlyApp {
         this.window = new MainWindow(isSender, this);
     }
 
-    setEyeData(vector) {
-        console.log("vector", vector);
+    set eyeData(vector) {
+        // console.log("vector", vector);
         this.window.eyePosition = vector;
     }
 
