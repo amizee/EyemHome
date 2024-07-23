@@ -1,12 +1,40 @@
 import {SvgPlus, SquidlyApp} from "https://session-app.squidly.com.au/src/Apps/app-class.js"
 
-const itemPositions = [
-    {"top":"53%", "left": "47%", "name":"teddybear"}, 
-    {"top":"80%", "left": "73%", "name":"bag"}, 
-    {"top":"53%", "left": "27%", "name":"books"}, 
-    {"top":"43%", "left": "70%", "name":"clothes"}, 
-    {"top":"20%", "left": "57%", "name":"clock"}
-];
+const itemPositions = { 
+    "Standard": [
+        {"top":"53%", "left": "47%", "name":"teddybear"}, 
+        {"top":"80%", "left": "73%", "name":"bag"}, 
+        {"top":"53%", "left": "27%", "name":"books"}, 
+        {"top":"43%", "left": "70%", "name":"clothes"}, 
+        {"top":"20%", "left": "57%", "name":"clock"}
+    ],
+    "Birthday": [
+        {"top":"53%", "left": "47%", "name":"teddybear"},
+        {"top":"20%", "left": "47%", "name":"confetti-ball"},
+        {"top":"80%", "left": "73%", "name":"gift"}, 
+        {"top":"53%", "left": "27%", "name":"books"}, 
+        {"top":"43%", "left": "70%", "name":"clothes"}, 
+        {"top":"20%", "left": "57%", "name":"clock"}
+    ],
+    "Halloween": [
+        {"top":"53%", "left": "47%", "name":"blackcat"}, 
+        {"top":"80%", "left": "60%", "name":"Halloween Tree"}, 
+        {"top":"49%", "left": "18%", "name":"witchhat"}, 
+        {"top":"65%", "left": "80%", "name":"Broom"}, 
+        {"top":"20%", "left": "57%", "name":"bat"},
+        {"top":"80%", "left": "27%", "name":"Pumpkin"}, 
+        {"top":"65%", "left": "25%", "name":"Candies"}
+    ],
+    "Christmas": [
+        {"top":"53%", "left": "47%", "name":"santaclaus"}, 
+        {"top":"80%", "left": "73%", "name":"elf"}, 
+        {"top":"53%", "left": "27%", "name":"chicken"}, 
+        {"top":"43%", "left": "70%", "name":"gingerbread"}, 
+        {"top":"20%", "left": "37%", "name":"christmas socks"},
+        {"top":"73%", "left": "27%", "name":"snowglobe"},
+        {"top":"80%", "left": "15%", "name":"star"},
+    ]
+};
 
 const backgroundAspectRatio = 1077/600;
 
@@ -21,7 +49,7 @@ class Item extends SvgPlus {
         super("img");
         this.props = {
             name: item.name, 
-            src: `http://127.0.0.1:5502/images/${item.name}.png`, 
+            src: `http://127.0.0.1:5502/images/${item.name}.svg`, 
             styles: {
                 position: "absolute", 
                 top: item.top, 
@@ -98,8 +126,30 @@ class BedroomWindow extends SvgPlus {
             "transform": "translate(-50%, -50%)"
         }
 
+        // query the database for the background image
+        app.onValue("level", (level) => {
+            if (level){
+                console.log("level: ", level);
+                this.level = level;
+                if (!this.background){
+                    this.background = this.createChild("img", {src: `http://127.0.0.1:5502/images/${level}.svg`, styles: {position: "relative", width: "100%", height: "100%", "object-fit": "contain", "z-index":"-1"}});
+                } else {
+                    this.background.src = `http://127.0.0.1:5502/images/${level}.svg`;
+                }
+                
+                
+            } else {
+                this.level = "Standard";
+                if (!this.background){
+                    this.background = this.createChild("img", {src: `http://127.0.0.1:5502/images/standard.svg`, styles: {position: "relative", width: "100%", height: "100%", "object-fit": "contain", "z-index":"-1"}});
+                } else {
+                    this.background.src = `http://127.0.0.1:5502/images/standard.svg`;
+                }
+            }
+        });
+
         // create background image for the game window: maybe randomize the bedroom image generation later
-        this.background = this.createChild("img", {src: "http://127.0.0.1:5502/images/standard.svg", styles: {position: "relative", width: "100%", height: "100%", "object-fit": "contain"}});
+        // this.background = this.createChild("img", {src: "http://127.0.0.1:5502/images/standard.svg", styles: {position: "relative", width: "100%", height: "100%", "object-fit": "contain"}});
 
         this.promptWindow = this.createChild("div", {styles: {position: "absolute", top: "0%", left: "50%", transform: "translateX(-50%)", "font-size": "30px"}});
 
@@ -123,6 +173,8 @@ class BedroomWindow extends SvgPlus {
 
                 }
                 this.itemsOnScreen = itemsOnScreen;
+            } else {
+                this.itemsOnScreen = itemPositions[this.level];
             }
             
         });
@@ -136,8 +188,9 @@ class BedroomWindow extends SvgPlus {
         });
 
         app.onValue("prompt", (prompt) => {
-            console.log("onvalue prompt");
-            if (this.promptWindow && prompt){ 
+            console.log("onvalue prompt", prompt);
+            if (this.promptWindow) { 
+                if (typeof prompt !== "string") prompt = "";
                 this.promptWindow.textContent = prompt;
             }
         });
@@ -159,13 +212,21 @@ class BedroomWindow extends SvgPlus {
                 if (aspectRatio < backgroundAspectRatio){
                     this.style.width = "100%";
                     this.style.height = "auto";
-                    this.background.style.width = "100%";
-                    this.background.style.height = "auto";
+                    if (this.background){
+                        this.background.style.width = "100%";
+                        this.background.style.height = "auto";
+                    }
+                    // this.background.style.width = "100%";
+                    // this.background.style.height = "auto";
                 } else {
                     this.style.width = "auto";
                     this.style.height = "100%";
-                    this.background.style.width = "auto";
-                    this.background.style.height = "100%";
+                    if (this.background){
+                        this.background.style.width = "auto";
+                        this.background.style.height = "100%";
+                    }
+                    // this.background.style.width = "auto";
+                    // this.background.style.height = "100%";
                 }
             }
             await waitFrame();
@@ -174,10 +235,6 @@ class BedroomWindow extends SvgPlus {
 
     async getItemsOnScreen(){
         return await this.app.get("itemsOnScreen");
-    }
-
-    async getCorrectItems(){
-        return await this.app.get("correctItems");
     }
 
     fadeOutEffect(element) {
@@ -203,8 +260,12 @@ class BedroomWindow extends SvgPlus {
 
     async setStateAsync(params){
         let itemsOnScreen = await this.getItemsOnScreen();
+        console.log("setStateAsync: print the itemsOnScreen", itemsOnScreen);
         if (!itemsOnScreen){
-            itemsOnScreen = itemPositions;
+            console.log("itemsOnScreen is null");
+            console.log("level", this.level);
+            itemsOnScreen = itemPositions[this.level];
+            console.log("itemsOnScreen after getting null value", itemsOnScreen);
         }
         this.itemsOnScreen = itemsOnScreen;
         this.app.set("itemsOnScreen", itemsOnScreen);
@@ -215,7 +276,7 @@ class BedroomWindow extends SvgPlus {
             case "init":
                 // set the itemsOnScreen to the database
                 if (this.editable){
-                    this.app.set("itemsOnScreen", itemPositions);
+                    this.app.set("itemsOnScreen", this.itemsOnScreen);
                 }
                 // set the state to setup
                 this.app.set("state", "setup");
@@ -223,6 +284,7 @@ class BedroomWindow extends SvgPlus {
             case "setup":
                 this.correctItems = [];
                 this.items.innerHTML = "";
+                this.app.set("prompt", "");
                 if (this.editable){
                     let selButton = document.getElementsByName("selectButton");
                     if (selButton.length > 0){
@@ -237,8 +299,15 @@ class BedroomWindow extends SvgPlus {
                             this.app.set("correctItems", this.correctItems);
                             this.app.set("state", "play");
                         });
+                
+                        this.createChild("button", {name: "resetButton", content: "&#8634;", styles: {position: "absolute", "font-size": "20px", bottom: "15%", left: "58%", transform: "translateX(-50%)", padding: "9px 15px", background: "#FFCC00", color: "white", border: "2px solid #CC9900", "border-radius": "5px"}}).addEventListener("click", () => {
+                            console.log("reset");
+                            this.app.set("prompt", "");
+                            // this.app.set("itemsOnScreen", null);
+                            this.app.set("itemsOnScreen", itemPositions[this.level]);
+                            this.app.set("state", "init");
+                        });
                     }
-                    
                 }
                 // now instead of calling the itemPositions, we can call the itemsOnScreen from the database
                 console.log("setup: print the itemsOnScreen", itemsOnScreen);
@@ -335,7 +404,7 @@ class BedroomWindow extends SvgPlus {
             i.hover = false;
         });
         if (item){
-            console.log(item);
+            // console.log(item);
             // item.click();
             item.hover = true;
 
@@ -740,11 +809,23 @@ class LevelScreen extends SvgPlus {
                 border: "solid 8px #466596"
             }
         })
-
+        
         if (this.isSender) {
             image.addEventListener('click', () => {
                 this.app.set("room", "game");
+                this.app.set("level", game);
+                this.app.set("itemsOnScreen", null);
+                this.app.set("itemsOnScreen", itemPositions[game]);
+                this.app.set("state", "init");
+                this.app.set("prompt", "");
             });
+
+            image.addEventListener('mouseover', () => {
+                image.styles = {cursor: "pointer"};
+            })
+            image.addEventListener('mouseout', () => {
+                image.styles = {cursor: "auto"};
+            })
         }
 
         let name = imageDiv.createChild("p", {
