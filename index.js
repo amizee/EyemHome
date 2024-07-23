@@ -101,7 +101,7 @@ class Item extends SvgPlus {
 }
 
 class BedroomWindow extends SvgPlus {
-    constructor(editable, app) {
+    constructor(editable, app, effect) {
         super ("div");
         window.addEventListener("mousemove", (e) => {
             // console.log("eye position: ", e.clientX, e.clientY);
@@ -109,8 +109,8 @@ class BedroomWindow extends SvgPlus {
         });
 
         this.app = app;
+        this.effect = effect;
         this.app.set("state", "init");
-
 
         this.eyebuffer = [];
 
@@ -188,8 +188,9 @@ class BedroomWindow extends SvgPlus {
         });
 
         app.onValue("prompt", (prompt) => {
-            console.log("onvalue prompt");
-            if (this.promptWindow && prompt){ 
+            console.log("onvalue prompt", prompt);
+            if (this.promptWindow) { 
+                if (typeof prompt !== "string") prompt = "";
                 this.promptWindow.textContent = prompt;
             }
         });
@@ -234,10 +235,6 @@ class BedroomWindow extends SvgPlus {
 
     async getItemsOnScreen(){
         return await this.app.get("itemsOnScreen");
-    }
-
-    async getCorrectItems(){
-        return await this.app.get("correctItems");
     }
 
     fadeOutEffect(element) {
@@ -287,12 +284,13 @@ class BedroomWindow extends SvgPlus {
             case "setup":
                 this.correctItems = [];
                 this.items.innerHTML = "";
+                this.app.set("prompt", "");
                 if (this.editable){
                     let selButton = document.getElementsByName("selectButton");
                     if (selButton.length > 0){
                         selButton[0].style.display = "block";
                     } else {
-                        this.createChild("button", {name: "selectButton", content: "Select", styles: {position: "absolute", bottom: "15%", left: "50%", transform: "translateX(-50%)", padding: "10px 20px", background: "#FFCC00", color: "white", border: "2px solid #CC9900", "border-radius": "5px"}}).addEventListener("click", () => {
+                        this.createChild("button", {name: "selectButton", content: "Select", styles: {position: "absolute", "font-size": "20px", bottom: "15%", left: "50%", transform: "translateX(-50%)", padding: "10px 20px", background: "#FFCC00", color: "white", border: "2px solid #CC9900", "border-radius": "5px"}}).addEventListener("click", () => {
                             if (this.correctItems.length === 0){
                                 alert("Please select at least one item");
                                 return;
@@ -301,8 +299,15 @@ class BedroomWindow extends SvgPlus {
                             this.app.set("correctItems", this.correctItems);
                             this.app.set("state", "play");
                         });
+                
+                        this.createChild("button", {name: "resetButton", content: "&#8634;", styles: {position: "absolute", "font-size": "20px", bottom: "15%", left: "58%", transform: "translateX(-50%)", padding: "9px 15px", background: "#FFCC00", color: "white", border: "2px solid #CC9900", "border-radius": "5px"}}).addEventListener("click", () => {
+                            console.log("reset");
+                            this.app.set("prompt", "");
+                            // this.app.set("itemsOnScreen", null);
+                            this.app.set("itemsOnScreen", itemPositions[this.level]);
+                            this.app.set("state", "init");
+                        });
                     }
-                    
                 }
                 // now instead of calling the itemPositions, we can call the itemsOnScreen from the database
                 console.log("setup: print the itemsOnScreen", itemsOnScreen);
@@ -342,6 +347,8 @@ class BedroomWindow extends SvgPlus {
                             if (item.name !== currentItem) {
                                 this.app.set("prompt", `Try again! This is not the ${currentItem.toUpperCase()}`);
                             } else {
+                                this.effect.load();
+                                this.effect.play();
                                 // remove the item from the screen
                                 this.app.set("itemsOnScreen", [...this.itemsOnScreen].filter(i => i.name !== item.name));
                                 // remove the item from the correct items
@@ -424,6 +431,7 @@ class MainWindow extends SvgPlus {
         }
 
         let audio = this.createChild("audio", {src: "http://127.0.0.1:5502/sounds/home.mp3"});
+        let effect = this.createChild("audio", {src: "http://127.0.0.1:5502/sounds/effect.mp3"});
         app.set("muted", true);
 
         // Create home and volume button on clinician side in the same position every time
@@ -510,13 +518,15 @@ class MainWindow extends SvgPlus {
         homeDiv.appendChild(musicRoom);
         homeDiv.appendChild(artRoom);
         homeDiv.appendChild(mivin);
-
-        bedroom.addEventListener('mouseover', () => {
-            bedroom.styles = {cursor: "pointer"};
-        })
-        bedroom.addEventListener('mouseout', () => {
-            bedroom.styles = {cursor: "auto"};
-        })
+        
+        if (isSender) {
+            bedroom.addEventListener('mouseover', () => {
+                bedroom.styles = {cursor: "pointer"};
+            })
+            bedroom.addEventListener('mouseout', () => {
+                bedroom.styles = {cursor: "auto"};
+            })
+        }
         
         // Update volume on both sides
         app.onValue("muted", (value) => {
@@ -527,12 +537,14 @@ class MainWindow extends SvgPlus {
                     this.volumeButton.props = {src: "http://127.0.0.1:5502/images/volume-mute.svg"};
                 }
                 audio.muted = true;
+                effect.muted = true;
             } else {
                 // Unmute logic
                 if (this.volumeButton) {
                     this.volumeButton.props = {src: "http://127.0.0.1:5502/images/volume.svg"};
                 }
                 audio.muted = false;
+                effect.muted = false;
                 audio.load();
                 audio.loop = true;
                 audio.play();
@@ -541,7 +553,7 @@ class MainWindow extends SvgPlus {
 
         app.onValue("room", (value) => { // Triggers once immediately after the listener is attached, to provide the current value of the data
             if (value === "home") {
-                // app.set("state", "setup");
+                app.set("state", "setup");
 
                 if (audio.src !== "http://127.0.0.1:5502/sounds/home.mp3") { // From SightnSeek to home screen
                     audio.src = "http://127.0.0.1:5502/sounds/home.mp3";
@@ -583,7 +595,7 @@ class MainWindow extends SvgPlus {
 
                 this.levelScreen = document.getElementById('level-screen');
                 if (!this.levelScreen) {
-                    this.levelScreen = new LevelScreen(app);
+                    this.levelScreen = new LevelScreen(app, isSender);
                     this.mainDiv.appendChild(this.levelScreen);
                 } else {
                     this.levelScreen.styles = {display: "block"};
@@ -593,6 +605,7 @@ class MainWindow extends SvgPlus {
                 audio.load();
                 audio.play();
                 
+                homeDiv.styles = {display: "none"};
                 if (isSender) {
                     if (!this.backButton) {
                         this.backButton = new BackButton(app);
@@ -607,7 +620,7 @@ class MainWindow extends SvgPlus {
                 }
     
                 if (!this.bedroom) {
-                    this.bedroom = new BedroomWindow(isSender, app);
+                    this.bedroom = new BedroomWindow(isSender, app, effect);
                     this.mainDiv.appendChild(this.bedroom);
                 } else {
                     this.bedroom.styles = {display: "block"};
@@ -616,23 +629,25 @@ class MainWindow extends SvgPlus {
         });
 
         let hoverTimer;
-        bedroom.addEventListener('mouseenter', function(e) {
-            let progressBar = new ProgressBar(e);
-            progressBar.props = {class: "progress-bar"};
-            document.body.appendChild(progressBar);
-            progressBar.animate();
-            hoverTimer = setTimeout(() => {
-                app.set("room", "levels");
-            }, 1000);
-        });
-
-        bedroom.addEventListener('mouseleave', function() {
-            let progressBars = document.querySelectorAll('.progress-bar');
-            for (let i = 0; i < progressBars.length; i++) {
-                progressBars[i].remove();
-            };
-            clearTimeout(hoverTimer);
-        });
+        if (isSender) {
+            bedroom.addEventListener('mouseenter', function(e) {
+                let progressBar = new ProgressBar(e);
+                progressBar.props = {class: "progress-bar"};
+                document.body.appendChild(progressBar);
+                progressBar.animate();
+                hoverTimer = setTimeout(() => {
+                    app.set("room", "levels");
+                }, 1000);
+            });
+    
+            bedroom.addEventListener('mouseleave', function() {
+                let progressBars = document.querySelectorAll('.progress-bar');
+                for (let i = 0; i < progressBars.length; i++) {
+                    progressBars[i].remove();
+                };
+                clearTimeout(hoverTimer);
+            });
+        }
     }    
 }
 
@@ -752,10 +767,11 @@ class BackButton extends SvgPlus {
 }
 
 class LevelScreen extends SvgPlus {
-    constructor (app) {
+    constructor (app, isSender) {
         super("div");
         
         this.app = app;
+        this.isSender = isSender;
         this.props = {id: "level-screen"};
         this.styles = {
             "object-fit": "contain",
@@ -793,16 +809,24 @@ class LevelScreen extends SvgPlus {
                 border: "solid 8px #466596"
             }
         })
+        
+        if (this.isSender) {
+            image.addEventListener('click', () => {
+                this.app.set("room", "game");
+                this.app.set("level", game);
+                this.app.set("itemsOnScreen", null);
+                this.app.set("itemsOnScreen", itemPositions[game]);
+                this.app.set("state", "init");
+                this.app.set("prompt", "");
+            });
 
-        image.addEventListener('click', () => {
-            this.app.set("room", "game");
-            this.app.set("level", game);
-            this.app.set("itemsOnScreen", null);
-            this.app.set("itemsOnScreen", itemPositions[game]);
-            this.app.set("state", "init");
-            this.app.set("prompt", "");
-            console.log("clear itemsOnScreen");
-        });
+            image.addEventListener('mouseover', () => {
+                image.styles = {cursor: "pointer"};
+            })
+            image.addEventListener('mouseout', () => {
+                image.styles = {cursor: "auto"};
+            })
+        }
 
         let name = imageDiv.createChild("p", {
             styles: {
