@@ -174,6 +174,11 @@ class BedroomWindow extends SvgPlus {
                     // find the item that should be removed
                     let itemToRemove = this.itemsOnScreen.find(i => !itemsOnScreen.find(j => j.name === i.name));
                     this.fadeOutEffect(itemToRemove.name);
+                    if (!this.effect.muted){
+                        this.effect.load();
+                        this.effect.play();
+                    }
+                    
                     // itemToRemove.styles.display = "none";
                     // remove the item from the correct items as well
                     // this.app.set("correctItems", this.correctItems.filter(i => i !== itemToRemove.name));
@@ -372,8 +377,7 @@ class BedroomWindow extends SvgPlus {
                             if (item.name !== currentItem) {
                                 this.app.set("prompt", `Try again! This is not the ${currentItem.toUpperCase()}`);
                             } else {
-                                this.effect.load();
-                                this.effect.play();
+                                
                                 // remove the item from the screen
                                 this.app.set("itemsOnScreen", [...this.itemsOnScreen].filter(i => i.name !== item.name));
                                 // remove the item from the correct items
