@@ -163,6 +163,14 @@ class BedroomWindow extends SvgPlus {
         this.selectedItems = [];
         this.itemsOnScreen = [];
 
+        // app.onValue("effect", (value)=> {
+        //     console.log("onvalue effect");
+        //     if (!this.effect.muted){
+        //         this.effect.load();
+        //         this.effect.play();
+        //     }
+        // });
+
         app.onValue("itemsOnScreen", (itemsOnScreen) => {
             // compare the value from the database and within the app
             // if the app has more items, fade out the extra items
@@ -176,7 +184,6 @@ class BedroomWindow extends SvgPlus {
                         this.effect.load();
                         this.effect.play();
                     }
-                    
                     // itemToRemove.styles.display = "none";
                     // remove the item from the correct items as well
                     // this.app.set("correctItems", this.correctItems.filter(i => i !== itemToRemove.name));
@@ -253,11 +260,6 @@ class BedroomWindow extends SvgPlus {
     }
 
     fadeOutEffect(element) {
-        // try {
-        //     throw new Error("This is an error");
-        // } catch (error) {
-        //     console.log(error.stack);
-        // }
         // TODO disable fadeouteffect on clinician side
         if (typeof element === 'string') {
             element = this.querySelector(`[name=${element}]`);
@@ -280,13 +282,29 @@ class BedroomWindow extends SvgPlus {
                     this.app.set("correctItems", this.correctItems);
                     this.app.set("state", "play");
                 });
-                this.createChild("button", {name: "resetButton", content: "&#8634;", styles: {position: "absolute", "font-size": "20px", bottom: "15%", left: "58%", transform: "translateX(-50%)", padding: "9px 15px", background: "#FFCC00", color: "white", border: "2px solid #CC9900", "border-radius": "5px"}}).addEventListener("click", () => {
+                let selectButton = document.getElementsByName("selectButton")[0];
+                selectButton.addEventListener("mouseover", () => {
+                    selectButton.styles = {"cursor": "pointer"};
+                })
+                selectButton.addEventListener("mouseleave", () => {
+                    selectButton.styles = {"cursor": "auto"};
+                })
+
+                this.createChild("button", { name: "resetButton", content: "&#8634;", styles: {position: "absolute", "font-size": "20px", bottom: "15%", left: "55%", transform: "translateX(-50%)", padding: "9.5px 15px", background: "#FFCC00", color: "white", border: "2px solid #CC9900", "border-radius": "5px"}}).addEventListener("click", () => {
                     console.log("reset");
                     this.app.set("prompt", "");
                     // this.app.set("itemsOnScreen", null);
                     this.app.set("itemsOnScreen", itemPositions[this.level]);
                     this.app.set("state", "reset");
                 });
+                let resetButton = document.getElementsByName("resetButton")[0];
+                resetButton.addEventListener("mouseover", () => {
+                    resetButton.styles = {"cursor": "pointer"};
+                })
+                resetButton.addEventListener("mouseleave", () => {
+                    resetButton.styles = {"cursor": "auto"};
+                })
+               
             }
         }
     }
@@ -379,7 +397,7 @@ class BedroomWindow extends SvgPlus {
                                 // remove the item from the screen
                                 this.app.set("itemsOnScreen", [...this.itemsOnScreen].filter(i => i.name !== item.name));
                                 // remove the item from the correct items
-
+                                this.app.set("effect", true);
                                 this.app.set("correctItems", this.correctItems.slice(1));
                                 // if correct items are empty, set the state to end
                                 if (!this.correctItems){
