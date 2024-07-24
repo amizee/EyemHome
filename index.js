@@ -7,33 +7,33 @@ const itemPositions = {
         {"top":"53%", "left": "27%", "name":"books"}, 
         {"top":"43%", "left": "70%", "name":"clothes"}, 
         {"top":"20%", "left": "57%", "name":"clock"},
-        {"top":"40%", "left": "63%", "name":"bird"}
+        {"top":"40%", "left": "2%", "name":"bird"},
     ],
     "Birthday": [
-        {"top":"53%", "left": "47%", "name":"teddybear"},
-        {"top":"20%", "left": "47%", "name":"confetti-ball"},
+        {"top":"53%", "left": "47%", "name":"dachshund"},
         {"top":"80%", "left": "73%", "name":"gift"}, 
-        {"top":"53%", "left": "27%", "name":"books"}, 
-        {"top":"43%", "left": "70%", "name":"clothes"}, 
-        {"top":"20%", "left": "57%", "name":"clock"}
+        {"top":"56%", "left": "22%", "name":"birthday_cake"}, 
+        {"top":"65%", "left": "2%", "name":"birthday_card"}, 
+        {"top":"37%", "left": "79.5%", "name":"birthday_hat"},
+        {"top":"37%", "left": "4%", "name":"dancers"}
     ],
     "Halloween": [
-        {"top":"53%", "left": "47%", "name":"blackcat"}, 
-        {"top":"80%", "left": "60%", "name":"Halloween Tree"}, 
+        {"top":"53%", "left": "47%", "name":"cat"}, 
+        {"top":"80%", "left": "65%", "name":"lollipop"}, 
         {"top":"49%", "left": "18%", "name":"witchhat"}, 
         {"top":"65%", "left": "80%", "name":"Broom"}, 
         {"top":"20%", "left": "57%", "name":"bat"},
-        {"top":"80%", "left": "27%", "name":"Pumpkin"}, 
-        {"top":"65%", "left": "25%", "name":"Candies"}
+        {"top":"40%", "left": "5%", "name":"owl"}, 
+        {"top":"65%", "left": "25%", "name":"Pumpkin"}
     ],
     "Christmas": [
         {"top":"53%", "left": "47%", "name":"santaclaus"}, 
-        {"top":"80%", "left": "73%", "name":"elf"}, 
-        {"top":"53%", "left": "27%", "name":"chicken"}, 
-        {"top":"43%", "left": "70%", "name":"gingerbread"}, 
-        {"top":"20%", "left": "37%", "name":"christmas socks"},
-        {"top":"73%", "left": "27%", "name":"snowglobe"},
-        {"top":"80%", "left": "15%", "name":"star"},
+        {"top":"39%", "left": "3%", "name":"elf"}, 
+        {"top":"52%", "left": "25%", "name":"chicken"}, 
+        {"top":"80%", "left": "80%", "name":"gingerbread"}, 
+        {"top":"21.5%", "left": "37%", "name":"christmas_socks"},
+        {"top":"73%", "left": "26%", "name":"snowglobe"},
+        {"top":"27%", "left": "73%", "name":"star"},
     ]
 };
 
@@ -46,31 +46,36 @@ async function waitFrame() {
 }
 
 class Item extends SvgPlus {
-    constructor(item) {
+    constructor(params) {
         super("img");
         this.props = {
-            name: item.name, 
-            src: `http://127.0.0.1:5502/images/${item.name}.svg`, 
+            name: params[0].name, 
+            src: `http://127.0.0.1:5502/images/${params[0].name}.svg`, 
             styles: {
                 position: "absolute", 
-                top: item.top, 
-                left: item.left, 
+                top: params[0].top, 
+                left: params[0].left, 
                 width: "8%"
             }
         }
+        this.editable = params[1];
         this.progress = 0;
         this.animate();
     }
 
     async animate() {
-        while (true) {
-            await waitFrame();
-            if (!this.hover) {
-                this.progress -= 0.003;
-            } else {
-                this.progress += 0.02;
+        
+        if (!this.editable) {
+            while (true) {
+                await waitFrame();
+                if (!this.hover) {
+                    this.progress -= 0.005;
+                } else {
+                    this.progress += 0.02;
+                }
             }
         }
+        
     }
 
     set hover(value) {
@@ -111,7 +116,7 @@ class BedroomWindow extends SvgPlus {
 
         this.app = app;
         this.effect = effect;
-        this.app.set("state", "init");
+        // this.app.set("state", "init");
 
         this.styles = {
             "position": "absolute",
@@ -167,6 +172,12 @@ class BedroomWindow extends SvgPlus {
                     // find the item that should be removed
                     let itemToRemove = this.itemsOnScreen.find(i => !itemsOnScreen.find(j => j.name === i.name));
                     this.fadeOutEffect(itemToRemove.name);
+                    if (!this.effect.muted){
+                        this.effect.load();
+                        this.effect.play();
+                    }
+                    
+                    // itemToRemove.styles.display = "none";
                     // remove the item from the correct items as well
                     // this.app.set("correctItems", this.correctItems.filter(i => i !== itemToRemove.name));
 
@@ -174,6 +185,7 @@ class BedroomWindow extends SvgPlus {
                 this.itemsOnScreen = itemsOnScreen;
             } else {
                 this.itemsOnScreen = itemPositions[this.level];
+                this.app.set("itemsOnScreen", this.itemsOnScreen);
             }
             
         });
@@ -181,9 +193,16 @@ class BedroomWindow extends SvgPlus {
         app.onValue("correctItems", (correctItems) => {
             console.log("onvalue correctItems");
             console.log(correctItems);
+            console.log(this.correctItems);
             if (this.correctItems){
                 this.correctItems = correctItems;
+                if (this.correctItems && this.correctItems.length !== 0){
+                    this.app.set("prompt", `Select the ${this.correctItems[0].replace(/_/g, " ").toUpperCase()}`);
+                }
+                
             }
+            
+            
         });
 
         app.onValue("prompt", (prompt) => {
@@ -197,7 +216,7 @@ class BedroomWindow extends SvgPlus {
 
         app.onValue("state", async (state) => {
             // this.state = state;
-            console.log("onvalue state");
+            console.log("onvalue state", state);
             await this.setStateAsync(state);
         });
 
@@ -239,87 +258,93 @@ class BedroomWindow extends SvgPlus {
         // } catch (error) {
         //     console.log(error.stack);
         // }
+        // TODO disable fadeouteffect on clinician side
         if (typeof element === 'string') {
             element = this.querySelector(`[name=${element}]`);
         }
-        let op = 1;  // initial opacity
-        const timer = setInterval(function () {
-            if (op <= 0.1) {
-                clearInterval(timer);
-                element.style.display = 'none'; //hide the element after fade out
+        element.style.display = 'none';
+    }
+
+    loadButtons(){
+        if (this.editable){
+            let selButton = document.getElementsByName("selectButton");
+            if (selButton.length > 0){
+                selButton[0].style.display = "block";
+            } else {
+                this.createChild("button", {name: "selectButton", content: "Select", styles: {position: "absolute", "font-size": "20px", bottom: "15%", left: "50%", transform: "translateX(-50%)", padding: "10px 20px", background: "#FFCC00", color: "white", border: "2px solid #CC9900", "border-radius": "5px"}}).addEventListener("click", () => {
+                    if (this.correctItems.length === 0){
+                        alert("Please select at least one item");
+                        return;
+                    }
+                    console.log("set to play state", this.correctItems);
+                    this.app.set("correctItems", this.correctItems);
+                    this.app.set("state", "play");
+                });
+                this.createChild("button", {name: "resetButton", content: "&#8634;", styles: {position: "absolute", "font-size": "20px", bottom: "15%", left: "58%", transform: "translateX(-50%)", padding: "9px 15px", background: "#FFCC00", color: "white", border: "2px solid #CC9900", "border-radius": "5px"}}).addEventListener("click", () => {
+                    console.log("reset");
+                    this.app.set("prompt", "");
+                    // this.app.set("itemsOnScreen", null);
+                    this.app.set("itemsOnScreen", itemPositions[this.level]);
+                    this.app.set("state", "reset");
+                });
             }
-            element.style.opacity = op;
-            element.style.filter = 'alpha(opacity=' + op * 100 + ")";
-            op -= op * 0.1;
-        }, 50); // Adjust the interval for speed control
+        }
     }
 
     async setStateAsync(params){
-        let itemsOnScreen = await this.getItemsOnScreen();
-        console.log("setStateAsync: print the itemsOnScreen", itemsOnScreen);
-        if (!itemsOnScreen){
-            console.log("itemsOnScreen is null");
-            console.log("level", this.level);
-            itemsOnScreen = itemPositions[this.level];
-            console.log("itemsOnScreen after getting null value", itemsOnScreen);
-        }
-        this.itemsOnScreen = itemsOnScreen;
-        this.app.set("itemsOnScreen", itemsOnScreen);
+        
         switch (params) {
             case null:
                 this.app.set("state", "init");
                 break;
-            case "init":
-                // set the itemsOnScreen to the database
+            case "reset":
+                console.log("resetting the state");
+                this.app.set("itemsOnScreen", itemPositions[this.level]);
+                this.app.set("prompt", "");
+                this.app.set("state", "init");
                 if (this.editable){
-                    this.app.set("itemsOnScreen", this.itemsOnScreen);
+                    let selButton = document.getElementsByName("selectButton")[0];
+                    console.log("show the select button",selButton);
+                    selButton.style.pointerEvents = "auto";
                 }
-                // // clears everything
-                // this.app.set("correctItems", []);
-                // this.app.set("prompt", "");
-                // this.app.set("itemsOnScreen", itemPositions[this.level]);
-                // set the state to setup
+                
+                break;
+            case "init":
+                // load the items on the screen
+                let itemsOnScreen = await this.getItemsOnScreen();
+                console.log("setStateAsync: print the itemsOnScreen", itemsOnScreen);
+                if (!itemsOnScreen){
+                    console.log("itemsOnScreen is null");
+                    console.log("level", this.level);
+                    itemsOnScreen = itemPositions[this.level];
+                    console.log("itemsOnScreen after getting null value", itemsOnScreen);
+                }
+                this.itemsOnScreen = itemsOnScreen;
+                this.app.set("itemsOnScreen", itemsOnScreen);
                 this.app.set("state", "setup");
                 
                 break;
             case "setup":
                 this.correctItems = [];
                 this.items.innerHTML = "";
-                if (this.editable){
-                    let selButton = document.getElementsByName("selectButton");
-                    if (selButton.length > 0){
-                        selButton[0].style.display = "block";
-                    } else {
-                        this.createChild("button", {name: "selectButton", content: "Select", styles: {position: "absolute", "font-size": "20px", bottom: "15%", left: "50%", transform: "translateX(-50%)", padding: "10px 20px", background: "#FFCC00", color: "white", border: "2px solid #CC9900", "border-radius": "5px"}}).addEventListener("click", () => {
-                            if (this.correctItems.length === 0){
-                                alert("Please select at least one item");
-                                return;
-                            }
-                            console.log("set to play state", this.correctItems);
-                            this.app.set("correctItems", this.correctItems);
-                            this.app.set("state", "play");
-                        });
-                        this.createChild("button", {name: "resetButton", content: "&#8634;", styles: {position: "absolute", "font-size": "20px", bottom: "15%", left: "54%", transform: "translateX(-50%)", padding: "9.5px 15px", background: "#FFCC00", color: "white", border: "2px solid #CC9900", "border-radius": "5px"}}).addEventListener("click", () => {
-                            console.log("reset");
-                            this.app.set("prompt", "");
-                            this.app.set("itemsOnScreen", itemPositions[this.level]);
-                            this.app.set("state", "init");
-                        });
-                    }
-                    
-                }
+                this.loadButtons();
                 // now instead of calling the itemPositions, we can call the itemsOnScreen from the database
-                console.log("setup: print the itemsOnScreen", itemsOnScreen);
-                for (const item of itemsOnScreen) {
+                console.log("setup: print the itemsOnScreen", this.itemsOnScreen);
+                console.log("this.correct items: before setting the items ", this.correctItems);
+                // Ensure this.correctItems is an array
+                for (const item of this.itemsOnScreen) {
 
-                    let itemImg = this.items.createChild(Item, {}, item);
+                    let itemImg = this.items.createChild(Item, {}, [item, this.editable]);
                     
                     if (this.editable){
                         itemImg.addEventListener("click", () => {
                             // select/deselect the item
-                            console.log(this.correctItems);
+                            console.log("this.correct item in setup state: ", this.correctItems);
+                            if (!this.correctItems){
+                                this.correctItems = [];
+                            }
                             const itemIndex = this.correctItems.indexOf(item.name);
-                            if (itemIndex > -1){
+                            if (itemIndex > -1) {
                                 this.correctItems.splice(itemIndex, 1);
                                 console.log(this.correctItems);
                                 itemImg.style.border = "";
@@ -336,19 +361,20 @@ class BedroomWindow extends SvgPlus {
 
             case "play":
                 this.items.innerHTML = "";
-                this.app.set("prompt", `Select the ${this.correctItems[0].toUpperCase()}`);
+                // this.app.set("prompt", `Select the ${this.correctItems[0].toUpperCase()}`);
                 // no need to set promptWindow here as the prompt is already set in onValue listener
                 // instead of calling the itemPositions, we can call the itemsOnScreen from the database
+                if (this.editable){
+                    this.loadButtons();
+                }
                 for (const item of this.itemsOnScreen) {
-                    let itemImg = this.items.createChild(Item, {}, item);
+                    let itemImg = this.items.createChild(Item, {}, [item, this.editable]);
                     if (!this.editable) {
                         itemImg.addEventListener("click", () => {
                             let currentItem = this.correctItems[0];
                             if (item.name !== currentItem) {
                                 this.app.set("prompt", `Try again! This is not the ${currentItem.toUpperCase()}`);
                             } else {
-                                this.effect.load();
-                                this.effect.play();
                                 
                                 // remove the item from the screen
                                 this.app.set("itemsOnScreen", [...this.itemsOnScreen].filter(i => i.name !== item.name));
@@ -360,7 +386,7 @@ class BedroomWindow extends SvgPlus {
                                     this.app.set("state", "end");
                                 } else {
                                     // update the prompt
-                                    this.app.set("prompt", `Select the ${this.correctItems[0].toUpperCase()}`);
+                                    this.app.set("prompt", `Select the ${this.correctItems[0].replace(/_/g, " ").toUpperCase()}`);
                                 }
                             }
                         });  
@@ -370,11 +396,22 @@ class BedroomWindow extends SvgPlus {
 
             case "end":
                 // disable all the items
+                this.items.innerHTML = "";
                 console.log("Case end");
                 this.app.set("prompt", "Congratulations!");
-                this.items.querySelectorAll("img").forEach(item => {
-                    item.style.pointerEvents = "none";
-                });
+                this.loadButtons();
+                if (this.editable){
+                    document.getElementsByName("selectButton")[0].style.pointerEvents = "none";
+                }
+                let images = await this.getItemsOnScreen();
+                for (const item of images) {
+                    let itemImg = this.items.createChild(Item, {}, [item, this.editable]);
+                    itemImg.style.pointerEvents = "none";
+                }
+
+                // this.items.querySelectorAll("img").forEach(item => {
+                //     item.style.pointerEvents = "none";
+                // });
                 break;
         
             default:
@@ -383,13 +420,15 @@ class BedroomWindow extends SvgPlus {
     }
 
     checkVectorOnItem(vector) {
+        const offsetRatio = 1;
         let x = vector.x;
         let y = vector.y;
         let items = this.items.children;
         for (let i = 0; i < items.length; i++){
             let item = items[i];
             let rect = item.getBoundingClientRect();
-            if (x > rect.left && x < rect.right && y > rect.top && y < rect.bottom){
+            // TODO enlarge clickbox
+            if (x > rect.left*0.9 && x < rect.right*1.1 && y > rect.top*0.9 && y < rect.bottom*1.1){
                 return item;
             }
         }
@@ -398,6 +437,7 @@ class BedroomWindow extends SvgPlus {
 
     set eyePosition(vector) {
         let item = this.checkVectorOnItem(vector);
+        // console.log("item: ", item);
         // console.log("item: ", item);
         [...this.items.children].forEach(i => {
             i.hover = false;
@@ -818,10 +858,9 @@ class LevelScreen extends SvgPlus {
             image.addEventListener('click', () => {
                 this.app.set("room", "game");
                 this.app.set("level", game);
-                this.app.set("itemsOnScreen", null);
-                this.app.set("itemsOnScreen", itemPositions[game]);
-                this.app.set("state", "init");
-                this.app.set("prompt", "");
+                // this.app.set("itemsOnScreen", itemPositions[game]);
+                this.app.set("state", "reset");
+                // this.app.set("prompt", "");
             });
 
             image.addEventListener('mouseover', () => {
@@ -860,7 +899,6 @@ class LevelScreen extends SvgPlus {
             document.getElementById('level-screen').style.marginTop = "25%"; 
             columns = "repeat(1, 1fr)";
         }
-
         this.gamesDiv.style.gridTemplateColumns = columns;
     }
 }
