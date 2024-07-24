@@ -7,7 +7,7 @@ const itemPositions = {
         {"top":"53%", "left": "27%", "name":"books"}, 
         {"top":"43%", "left": "70%", "name":"clothes"}, 
         {"top":"20%", "left": "57%", "name":"clock"},
-        {"top":"40%", "left": "2%", "name":"bird"}
+        {"top":"40%", "left": "2%", "name":"bird"},
     ],
     "Birthday": [
         {"top":"53%", "left": "47%", "name":"dachshund"},
@@ -118,14 +118,11 @@ class BedroomWindow extends SvgPlus {
         this.effect = effect;
         // this.app.set("state", "init");
 
-
-        this.eyebuffer = [];
-
         this.styles = {
             "position": "absolute",
             "display": "flex",
-            "justify-content": "center", // Center horizontally
-            "align-items": "center", // Center vertically
+            "justify-content": "center", 
+            "align-items": "center", 
             "width": "100%", 
             "height": "100%",
             "top": "50%",
@@ -166,6 +163,14 @@ class BedroomWindow extends SvgPlus {
         this.selectedItems = [];
         this.itemsOnScreen = [];
 
+        // app.onValue("effect", (value)=> {
+        //     console.log("onvalue effect");
+        //     if (!this.effect.muted){
+        //         this.effect.load();
+        //         this.effect.play();
+        //     }
+        // });
+
         app.onValue("itemsOnScreen", (itemsOnScreen) => {
             // compare the value from the database and within the app
             // if the app has more items, fade out the extra items
@@ -179,7 +184,6 @@ class BedroomWindow extends SvgPlus {
                         this.effect.load();
                         this.effect.play();
                     }
-                    
                     // itemToRemove.styles.display = "none";
                     // remove the item from the correct items as well
                     // this.app.set("correctItems", this.correctItems.filter(i => i !== itemToRemove.name));
@@ -256,11 +260,6 @@ class BedroomWindow extends SvgPlus {
     }
 
     fadeOutEffect(element) {
-        // try {
-        //     throw new Error("This is an error");
-        // } catch (error) {
-        //     console.log(error.stack);
-        // }
         // TODO disable fadeouteffect on clinician side
         if (typeof element === 'string') {
             element = this.querySelector(`[name=${element}]`);
@@ -283,13 +282,29 @@ class BedroomWindow extends SvgPlus {
                     this.app.set("correctItems", this.correctItems);
                     this.app.set("state", "play");
                 });
-                this.createChild("button", {name: "resetButton", content: "&#8634;", styles: {position: "absolute", "font-size": "20px", bottom: "15%", left: "58%", transform: "translateX(-50%)", padding: "9px 15px", background: "#FFCC00", color: "white", border: "2px solid #CC9900", "border-radius": "5px"}}).addEventListener("click", () => {
+                let selectButton = document.getElementsByName("selectButton")[0];
+                selectButton.addEventListener("mouseover", () => {
+                    selectButton.styles = {"cursor": "pointer"};
+                })
+                selectButton.addEventListener("mouseleave", () => {
+                    selectButton.styles = {"cursor": "auto"};
+                })
+
+                this.createChild("button", { name: "resetButton", content: "&#8634;", styles: {position: "absolute", "font-size": "20px", bottom: "15%", left: "55%", transform: "translateX(-50%)", padding: "9.5px 15px", background: "#FFCC00", color: "white", border: "2px solid #CC9900", "border-radius": "5px"}}).addEventListener("click", () => {
                     console.log("reset");
                     this.app.set("prompt", "");
                     // this.app.set("itemsOnScreen", null);
                     this.app.set("itemsOnScreen", itemPositions[this.level]);
                     this.app.set("state", "reset");
                 });
+                let resetButton = document.getElementsByName("resetButton")[0];
+                resetButton.addEventListener("mouseover", () => {
+                    resetButton.styles = {"cursor": "pointer"};
+                })
+                resetButton.addEventListener("mouseleave", () => {
+                    resetButton.styles = {"cursor": "auto"};
+                })
+               
             }
         }
     }
@@ -382,7 +397,7 @@ class BedroomWindow extends SvgPlus {
                                 // remove the item from the screen
                                 this.app.set("itemsOnScreen", [...this.itemsOnScreen].filter(i => i.name !== item.name));
                                 // remove the item from the correct items
-
+                                this.app.set("effect", true);
                                 this.app.set("correctItems", this.correctItems.slice(1));
                                 // if correct items are empty, set the state to end
                                 if (!this.correctItems){
@@ -439,23 +454,16 @@ class BedroomWindow extends SvgPlus {
     }
 
     set eyePosition(vector) {
-        // console.log(vector);
-        // console.log(this.eyebuffer);
-
         let item = this.checkVectorOnItem(vector);
+        // console.log("item: ", item);
         // console.log("item: ", item);
         [...this.items.children].forEach(i => {
             i.hover = false;
         });
         if (item){
             // console.log(item);
-            // item.click();
             item.hover = true;
-
         }
-        
-        // console.log(x, y);
-        // this.style.transform = `translate(${x}%, ${y}%)`;
     }
 }
 class MainWindow extends SvgPlus {
@@ -473,6 +481,10 @@ class MainWindow extends SvgPlus {
             "left": "50%",
             "transform": "translate(-50%, -50%)"
         }
+
+        window.addEventListener('resize', () => {
+            this.updateHomeStyles();
+        });
 
         let audio = this.createChild("audio", {src: "http://127.0.0.1:5502/sounds/home.mp3"});
         let effect = this.createChild("audio", {src: "http://127.0.0.1:5502/sounds/effect.mp3"});
@@ -499,51 +511,65 @@ class MainWindow extends SvgPlus {
         this.mainDiv = this;
         // Home screen
         let homeDiv = this.createChild("div", {styles: {position: "relative"}});
+        homeDiv.props = {
+            id: "house"
+        }
         this.homeDiv = homeDiv;
         let house = homeDiv.createChild("img", {
-            src: "http://127.0.0.1:5502/images/house.png", 
+            src: "http://127.0.0.1:5502/images/house.svg", 
             styles: {
-                "object-fit": "contain", 
                 "width":"100%", 
                 "height":"100%"
         }});
         this.house = house;
-        let bedroom = homeDiv.createChild("img", { 
+        this.findItemRoom = homeDiv.createChild("img", { 
             src: "http://127.0.0.1:5502/images/SightnSeek.svg", 
             styles: {
                 position: "absolute",
-                height: "20%",
-                top: "35.5%",
+                height: "20.5%",
+                top: "36.5%",
                 right: "33.7%",
                 border: "solid 8px #466596"
             }
         });
-        let kitchen = homeDiv.createChild("img", { 
+        if (isSender) {
+            this.findItemRoom.addEventListener('mouseover', () => {
+                this.findItemRoom.styles = {cursor: "pointer"};
+            })
+            this.findItemRoom.addEventListener('mouseout', () => {
+                this.findItemRoom.styles = {cursor: "auto"};
+            })
+            this.findItemRoom.addEventListener('click', () => {
+                app.set("room", "levels");
+            })
+        }
+
+        this.kitchenRoom = homeDiv.createChild("img", { 
             src: "http://127.0.0.1:5502/images/EyeSpell.svg", 
             styles: {
                 position: "absolute",
-                height: "20%",
-                top: "67%",
+                height: "20.5%",
+                top: "67.2%",
                 right: "33.7%",
                 border: "solid 8px #466596"
             }
         });
-        let musicRoom = homeDiv.createChild("img", { 
+        this.musicRoom = homeDiv.createChild("img", { 
             src: "http://127.0.0.1:5502/images/PianoTrials.svg", 
             styles: {
                 position: "absolute",
-                height: "20%",
-                top: "35.5%",
+                height: "20.5%",
+                top: "36.5%",
                 right: "9.7%",
                 border: "solid 8px #466596"
             }
         });
-        let artRoom = homeDiv.createChild("img", { 
+        this.artRoom = homeDiv.createChild("img", { 
             src: "http://127.0.0.1:5502/images/EyePaint.svg", 
             styles: {
                 position: "absolute",
-                height: "20%",
-                top: "67%",
+                height: "20.5%",
+                top: "67.2%",
                 right: "9.7%",
                 border: "solid 8px #466596"
             }
@@ -558,13 +584,6 @@ class MainWindow extends SvgPlus {
             }
         });
 
-        bedroom.addEventListener('mouseover', () => {
-            bedroom.styles = {cursor: "pointer"};
-        })
-        bedroom.addEventListener('mouseout', () => {
-            bedroom.styles = {cursor: "auto"};
-        })
-        
         // Update volume on both sides
         app.onValue("muted", (value) => {
             console.log("muted", value);
@@ -594,6 +613,7 @@ class MainWindow extends SvgPlus {
 
                 if (audio.src !== "http://127.0.0.1:5502/sounds/home.mp3") { // From SightnSeek to home screen
                     audio.src = "http://127.0.0.1:5502/sounds/home.mp3";
+                    audio.volume = 1;
                     audio.play();
                 }
 
@@ -616,6 +636,7 @@ class MainWindow extends SvgPlus {
             else if (value === "levels") {
                 if (audio.src !== "http://127.0.0.1:5502/sounds/home.mp3") { // From SightnSeek to home screen
                     audio.src = "http://127.0.0.1:5502/sounds/home.mp3";
+                    audio.volume = 1;
                     audio.play();
                 }
 
@@ -639,6 +660,7 @@ class MainWindow extends SvgPlus {
                 }
             } else if (value === "game") {
                 audio.src = "http://127.0.0.1:5502/sounds/bedroom-background.mp3";
+                audio.volume = 0.5;
                 audio.load();
                 audio.play();
                 
@@ -664,26 +686,6 @@ class MainWindow extends SvgPlus {
                 }
             }
         });
-
-        let hoverTimer;
-        bedroom.addEventListener('mouseenter', function(e) {
-            let progressBar = new ProgressBar(e);
-            progressBar.props = {class: "progress-bar"};
-            document.body.appendChild(progressBar);
-            progressBar.animate();
-            hoverTimer = setTimeout(() => {
-                app.set("room", "levels");
-            }, 1000);
-        });
-
-        bedroom.addEventListener('mouseleave', function() {
-            let progressBars = document.querySelectorAll('.progress-bar');
-            for (let i = 0; i < progressBars.length; i++) {
-                progressBars[i].remove();
-            };
-            clearTimeout(hoverTimer);
-        });
-
         this.updateAspectRatio();
     }
 
@@ -697,56 +699,43 @@ class MainWindow extends SvgPlus {
         while (true) {
             let parent = this.offsetParent;
             if (parent){
-                let backgroundAspectRatio2 = this.house.naturalWidth / this.house.naturalHeight;
+                let houseBackgroundAspectRatio = this.house.naturalWidth / this.house.naturalHeight;
 
                 let aspectRatio = parent.offsetWidth / parent.offsetHeight;
-                if (aspectRatio < backgroundAspectRatio2){
+                if (aspectRatio < houseBackgroundAspectRatio){
                     this.house.style.width = "100%";
                     this.house.style.height = "auto";
                     this.homeDiv.style.width = "100%";
                     this.homeDiv.style.height = "auto";
-                    // this.background.style.width = "100%";
-                    // this.background.style.height = "auto";
                 } else {
                     this.homeDiv.style.width = "auto";
                     this.homeDiv.style.height = "100%";
                     this.house.style.width = "auto";
                     this.house.style.height = "100%";
-                    // this.background.style.width = "auto";
-                    // this.background.style.height = "100%";
                 }
             }
             await waitFrame();
         }
     }    
-}
 
-class ProgressBar extends SvgPlus {
-    constructor(e) {
-        super("div");
+    updateHomeStyles() {
+        const screenWidth = window.innerWidth;
+        let images = document.querySelectorAll('#house img'); 
+        let games = Array.from(images).slice(1, 5); 
 
-        this.styles = {
-            position: "absolute",
-            left: e.clientX + "px",
-            top: e.clientY + "px",
-            width: "75px",
-            height: "75px",
-            "border-radius": "50%",
-            background: "radial-gradient(closest-side, white 69%, transparent 70% 100%), conic-gradient(limegreen calc(var(--progress-value) * 1%), lightgreen 0)",
-        }
-    }
-
-    animate() {
-        let progressValue = 0;
-        // Increment progress every 10 milliseconds
-        let interval = setInterval(() => {
-            if (progressValue >= 100) {
-                clearInterval(interval);
-            } else {
-                progressValue++;
-                this.style.setProperty('--progress-value', progressValue);
+        if (screenWidth < 1200) {
+            for (const index in games) {
+                games[index].styles = {
+                    border: "solid 4px #466596"
+                }
             }
-        }, 10);
+        } else {
+            for (const index in games) {
+                games[index].styles = {
+                    border: "solid 8px #466596"
+                }
+            }
+        }
     }
 }
 
@@ -880,7 +869,7 @@ class LevelScreen extends SvgPlus {
                 width: "100%",
                 height: "auto",
                 border: "solid 8px #466596"
-            }
+            },
         })
 
         if (this.isSender) {
@@ -919,15 +908,15 @@ class LevelScreen extends SvgPlus {
         const screenWidth = window.innerWidth;
 
         if (screenWidth > 1650) { 
+            document.getElementById('level-screen').style.marginTop = "15%"; 
             columns = "repeat(3, 1fr)";
         } else if (screenWidth > 1090 && screenWidth <= 1650) { 
             document.getElementById('level-screen').style.marginTop = "20%"; 
             columns = "repeat(2, 1fr)";
         } else {
-            document.getElementById('level-screen').style.marginTop = "30%"; 
+            document.getElementById('level-screen').style.marginTop = "25%"; 
             columns = "repeat(1, 1fr)";
         }
-
         this.gamesDiv.style.gridTemplateColumns = columns;
     }
 }
