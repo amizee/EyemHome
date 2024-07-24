@@ -6,7 +6,8 @@ const itemPositions = {
         {"top":"80%", "left": "73%", "name":"bag"}, 
         {"top":"53%", "left": "27%", "name":"books"}, 
         {"top":"43%", "left": "70%", "name":"clothes"}, 
-        {"top":"20%", "left": "57%", "name":"clock"}
+        {"top":"20%", "left": "57%", "name":"clock"},
+        {"top":"40%", "left": "63%", "name":"bird"}
     ],
     "Birthday": [
         {"top":"53%", "left": "47%", "name":"teddybear"},
@@ -111,9 +112,6 @@ class BedroomWindow extends SvgPlus {
         this.app = app;
         this.effect = effect;
         this.app.set("state", "init");
-
-
-        this.eyebuffer = [];
 
         this.styles = {
             "position": "absolute",
@@ -301,10 +299,9 @@ class BedroomWindow extends SvgPlus {
                             this.app.set("correctItems", this.correctItems);
                             this.app.set("state", "play");
                         });
-                        this.createChild("button", {name: "resetButton", content: "&#8634;", styles: {position: "absolute", "font-size": "20px", bottom: "15%", left: "58%", transform: "translateX(-50%)", padding: "9px 15px", background: "#FFCC00", color: "white", border: "2px solid #CC9900", "border-radius": "5px"}}).addEventListener("click", () => {
+                        this.createChild("button", {name: "resetButton", content: "&#8634;", styles: {position: "absolute", "font-size": "20px", bottom: "15%", left: "54%", transform: "translateX(-50%)", padding: "9.5px 15px", background: "#FFCC00", color: "white", border: "2px solid #CC9900", "border-radius": "5px"}}).addEventListener("click", () => {
                             console.log("reset");
                             this.app.set("prompt", "");
-                            // this.app.set("itemsOnScreen", null);
                             this.app.set("itemsOnScreen", itemPositions[this.level]);
                             this.app.set("state", "init");
                         });
@@ -320,6 +317,7 @@ class BedroomWindow extends SvgPlus {
                     if (this.editable){
                         itemImg.addEventListener("click", () => {
                             // select/deselect the item
+                            console.log(this.correctItems);
                             const itemIndex = this.correctItems.indexOf(item.name);
                             if (itemIndex > -1){
                                 this.correctItems.splice(itemIndex, 1);
@@ -351,6 +349,7 @@ class BedroomWindow extends SvgPlus {
                             } else {
                                 this.effect.load();
                                 this.effect.play();
+                                
                                 // remove the item from the screen
                                 this.app.set("itemsOnScreen", [...this.itemsOnScreen].filter(i => i.name !== item.name));
                                 // remove the item from the correct items
@@ -399,7 +398,7 @@ class BedroomWindow extends SvgPlus {
 
     set eyePosition(vector) {
         let item = this.checkVectorOnItem(vector);
-        console.log("item: ", item);
+        // console.log("item: ", item);
         [...this.items.children].forEach(i => {
             i.hover = false;
         });
@@ -475,15 +474,17 @@ class MainWindow extends SvgPlus {
                 border: "solid 8px #466596"
             }
         });
-        this.findItemRoom.addEventListener('mouseover', () => {
-            this.findItemRoom.styles = {cursor: "pointer"};
-        })
-        this.findItemRoom.addEventListener('mouseout', () => {
-            this.findItemRoom.styles = {cursor: "auto"};
-        })
-        this.findItemRoom.addEventListener('click', () => {
-            app.set("room", "levels");
-        })
+        if (isSender) {
+            this.findItemRoom.addEventListener('mouseover', () => {
+                this.findItemRoom.styles = {cursor: "pointer"};
+            })
+            this.findItemRoom.addEventListener('mouseout', () => {
+                this.findItemRoom.styles = {cursor: "auto"};
+            })
+            this.findItemRoom.addEventListener('click', () => {
+                app.set("room", "levels");
+            })
+        }
 
         this.kitchenRoom = homeDiv.createChild("img", { 
             src: "http://127.0.0.1:5502/images/EyeSpell.svg", 
@@ -525,8 +526,6 @@ class MainWindow extends SvgPlus {
             }
         });
 
-       
-        
         // Update volume on both sides
         app.onValue("muted", (value) => {
             console.log("muted", value);
@@ -556,6 +555,7 @@ class MainWindow extends SvgPlus {
 
                 if (audio.src !== "http://127.0.0.1:5502/sounds/home.mp3") { // From SightnSeek to home screen
                     audio.src = "http://127.0.0.1:5502/sounds/home.mp3";
+                    audio.volume = 1;
                     audio.play();
                 }
 
@@ -578,6 +578,7 @@ class MainWindow extends SvgPlus {
             else if (value === "levels") {
                 if (audio.src !== "http://127.0.0.1:5502/sounds/home.mp3") { // From SightnSeek to home screen
                     audio.src = "http://127.0.0.1:5502/sounds/home.mp3";
+                    audio.volume = 1;
                     audio.play();
                 }
 
@@ -601,6 +602,7 @@ class MainWindow extends SvgPlus {
                 }
             } else if (value === "game") {
                 audio.src = "http://127.0.0.1:5502/sounds/bedroom-background.mp3";
+                audio.volume = 0.5;
                 audio.load();
                 audio.play();
                 
@@ -849,12 +851,13 @@ class LevelScreen extends SvgPlus {
         const screenWidth = window.innerWidth;
 
         if (screenWidth > 1650) { 
+            document.getElementById('level-screen').style.marginTop = "15%"; 
             columns = "repeat(3, 1fr)";
         } else if (screenWidth > 1090 && screenWidth <= 1650) { 
             document.getElementById('level-screen').style.marginTop = "20%"; 
             columns = "repeat(2, 1fr)";
         } else {
-            document.getElementById('level-screen').style.marginTop = "30%"; 
+            document.getElementById('level-screen').style.marginTop = "25%"; 
             columns = "repeat(1, 1fr)";
         }
 
