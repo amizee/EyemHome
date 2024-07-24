@@ -6,33 +6,34 @@ const itemPositions = {
         {"top":"80%", "left": "73%", "name":"bag"}, 
         {"top":"53%", "left": "27%", "name":"books"}, 
         {"top":"43%", "left": "70%", "name":"clothes"}, 
-        {"top":"20%", "left": "57%", "name":"clock"}
+        {"top":"20%", "left": "57%", "name":"clock"},
+        {"top":"40%", "left": "2%", "name":"bird"}
     ],
     "Birthday": [
-        {"top":"53%", "left": "47%", "name":"teddybear"},
-        {"top":"20%", "left": "47%", "name":"confetti-ball"},
+        {"top":"53%", "left": "47%", "name":"dachshund"},
         {"top":"80%", "left": "73%", "name":"gift"}, 
-        {"top":"53%", "left": "27%", "name":"books"}, 
-        {"top":"43%", "left": "70%", "name":"clothes"}, 
-        {"top":"20%", "left": "57%", "name":"clock"}
+        {"top":"56%", "left": "22%", "name":"birthday_cake"}, 
+        {"top":"65%", "left": "2%", "name":"birthday_card"}, 
+        {"top":"37%", "left": "79.5%", "name":"birthday_hat"},
+        {"top":"37%", "left": "4%", "name":"dancers"}
     ],
     "Halloween": [
-        {"top":"53%", "left": "47%", "name":"blackcat"}, 
-        {"top":"80%", "left": "60%", "name":"Halloween_Tree"}, 
+        {"top":"53%", "left": "47%", "name":"cat"}, 
+        {"top":"80%", "left": "65%", "name":"lollipop"}, 
         {"top":"49%", "left": "18%", "name":"witchhat"}, 
         {"top":"65%", "left": "80%", "name":"Broom"}, 
         {"top":"20%", "left": "57%", "name":"bat"},
-        {"top":"80%", "left": "27%", "name":"Pumpkin"}, 
-        {"top":"65%", "left": "25%", "name":"Candies"}
+        {"top":"40%", "left": "5%", "name":"owl"}, 
+        {"top":"65%", "left": "25%", "name":"Pumpkin"}
     ],
     "Christmas": [
         {"top":"53%", "left": "47%", "name":"santaclaus"}, 
-        {"top":"80%", "left": "73%", "name":"elf"}, 
-        {"top":"53%", "left": "27%", "name":"chicken"}, 
-        {"top":"43%", "left": "70%", "name":"gingerbread"}, 
-        {"top":"20%", "left": "37%", "name":"christmas_socks"},
-        {"top":"73%", "left": "27%", "name":"snowglobe"},
-        {"top":"80%", "left": "15%", "name":"star"},
+        {"top":"39%", "left": "3%", "name":"elf"}, 
+        {"top":"52%", "left": "25%", "name":"chicken"}, 
+        {"top":"80%", "left": "80%", "name":"gingerbread"}, 
+        {"top":"21.5%", "left": "37%", "name":"christmas_socks"},
+        {"top":"73%", "left": "26%", "name":"snowglobe"},
+        {"top":"27%", "left": "73%", "name":"star"},
     ]
 };
 
@@ -174,6 +175,11 @@ class BedroomWindow extends SvgPlus {
                     // find the item that should be removed
                     let itemToRemove = this.itemsOnScreen.find(i => !itemsOnScreen.find(j => j.name === i.name));
                     this.fadeOutEffect(itemToRemove.name);
+                    if (!this.effect.muted){
+                        this.effect.load();
+                        this.effect.play();
+                    }
+                    
                     // itemToRemove.styles.display = "none";
                     // remove the item from the correct items as well
                     // this.app.set("correctItems", this.correctItems.filter(i => i !== itemToRemove.name));
@@ -372,8 +378,7 @@ class BedroomWindow extends SvgPlus {
                             if (item.name !== currentItem) {
                                 this.app.set("prompt", `Try again! This is not the ${currentItem.toUpperCase()}`);
                             } else {
-                                this.effect.load();
-                                this.effect.play();
+                                
                                 // remove the item from the screen
                                 this.app.set("itemsOnScreen", [...this.itemsOnScreen].filter(i => i.name !== item.name));
                                 // remove the item from the correct items
