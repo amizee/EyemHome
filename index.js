@@ -180,7 +180,8 @@ class BedroomWindow extends SvgPlus {
                     // find the item that should be removed
                     let itemToRemove = this.itemsOnScreen.find(i => !itemsOnScreen.find(j => j.name === i.name));
                     this.fadeOutEffect(itemToRemove.name);
-                    if (!this.effect.muted){
+                    console.log("this.state for sound effect", this.state);
+                    if (this.state && this.state === "play" && !this.effect.muted){
                         this.effect.load();
                         this.effect.play();
                     }
@@ -190,9 +191,15 @@ class BedroomWindow extends SvgPlus {
 
                 }
                 this.itemsOnScreen = itemsOnScreen;
-            } else {
-                this.itemsOnScreen = itemPositions[this.level];
-                this.app.set("itemsOnScreen", this.itemsOnScreen);
+            } 
+            else {
+                console.log("itemsOnScreen is null");
+                console.log("please log this: ", this.state && this.state !== "end");
+                if (this.state && this.state !== "end") {
+                    this.itemsOnScreen = itemPositions[this.level];
+                    this.app.set("itemsOnScreen", this.itemsOnScreen);
+                }
+                
             }
             
         });
@@ -222,7 +229,7 @@ class BedroomWindow extends SvgPlus {
         });
 
         app.onValue("state", async (state) => {
-            // this.state = state;
+            this.state = state;
             console.log("onvalue state", state);
             await this.setStateAsync(state);
         });
@@ -323,7 +330,9 @@ class BedroomWindow extends SvgPlus {
                 if (this.editable){
                     let selButton = document.getElementsByName("selectButton")[0];
                     console.log("show the select button",selButton);
-                    selButton.style.pointerEvents = "auto";
+                    if (selButton){
+                        selButton.style.pointerEvents = "auto";
+                    }
                 }
                 
                 break;
@@ -391,7 +400,7 @@ class BedroomWindow extends SvgPlus {
                         itemImg.addEventListener("click", () => {
                             let currentItem = this.correctItems[0];
                             if (item.name !== currentItem) {
-                                this.app.set("prompt", `Try again! This is not the ${currentItem.toUpperCase()}`);
+                                this.app.set("prompt", `Try again! This is not the ${currentItem.replace(/_/g, " ").toUpperCase()}`);
                             } else {
                                 
                                 // remove the item from the screen
