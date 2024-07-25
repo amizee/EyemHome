@@ -163,28 +163,20 @@ class BedroomWindow extends SvgPlus {
         this.selectedItems = [];
         this.itemsOnScreen = [];
 
-        // app.onValue("effect", (value)=> {
-        //     console.log("onvalue effect");
-        //     if (!this.effect.muted){
-        //         this.effect.load();
-        //         this.effect.play();
-        //     }
-        // });
-
         app.onValue("itemsOnScreen", (itemsOnScreen) => {
             // compare the value from the database and within the app
             // if the app has more items, fade out the extra items
             // in the play state
+            if (this.state && this.state === "play" && !this.effect.muted){
+                this.effect.load();
+                this.effect.play();
+            }
             if (itemsOnScreen){
                 if (this.itemsOnScreen.length > itemsOnScreen.length){
                     // find the item that should be removed
                     let itemToRemove = this.itemsOnScreen.find(i => !itemsOnScreen.find(j => j.name === i.name));
                     this.fadeOutEffect(itemToRemove.name);
                     console.log("this.state for sound effect", this.state);
-                    if (this.state && this.state === "play" && !this.effect.muted){
-                        this.effect.load();
-                        this.effect.play();
-                    }
                     // itemToRemove.styles.display = "none";
                     // remove the item from the correct items as well
                     // this.app.set("correctItems", this.correctItems.filter(i => i !== itemToRemove.name));
@@ -199,7 +191,6 @@ class BedroomWindow extends SvgPlus {
                     this.itemsOnScreen = itemPositions[this.level];
                     this.app.set("itemsOnScreen", this.itemsOnScreen);
                 }
-                
             }
             
         });
@@ -280,7 +271,7 @@ class BedroomWindow extends SvgPlus {
             if (selButton.length > 0){
                 selButton[0].style.display = "block";
             } else {
-                this.createChild("button", {name: "selectButton", content: "Select", styles: {position: "absolute", "font-size": "20px", bottom: "15%", left: "50%", transform: "translateX(-50%)", padding: "10px 20px", background: "#FFCC00", color: "white", border: "2px solid #CC9900", "border-radius": "5px"}}).addEventListener("click", () => {
+                this.createChild("button", {name: "selectButton", content: "Select", styles: {position: "absolute", "font-size": "0.8em", bottom: "15%", left: "47%", padding: "10px 20px", background: "#FFCC00", color: "white", border: "2px solid #CC9900", "border-radius": "5px"}}).addEventListener("click", () => {
                     if (this.correctItems.length === 0){
                         alert("Please select at least one item");
                         return;
@@ -297,7 +288,7 @@ class BedroomWindow extends SvgPlus {
                     selectButton.styles = {"cursor": "auto"};
                 })
 
-                this.createChild("button", { name: "resetButton", content: "&#8634;", styles: {position: "absolute", "font-size": "20px", bottom: "15%", left: "55%", transform: "translateX(-50%)", padding: "9.5px 15px", background: "#FFCC00", color: "white", border: "2px solid #CC9900", "border-radius": "5px"}}).addEventListener("click", () => {
+                this.createChild("button", { name: "resetButton", content: "&#8634;", styles: {position: "absolute", "font-size": "0.8em", bottom: "15%", left: "53%", "margin-left": "25px", padding: "9.2px 15px", background: "#FFCC00", color: "white", border: "2px solid #CC9900", "border-radius": "5px"}}).addEventListener("click", () => {
                     console.log("reset");
                     this.app.set("prompt", "");
                     // this.app.set("itemsOnScreen", null);
@@ -402,11 +393,13 @@ class BedroomWindow extends SvgPlus {
                             if (item.name !== currentItem) {
                                 this.app.set("prompt", `Try again! This is not the ${currentItem.replace(/_/g, " ").toUpperCase()}`);
                             } else {
-                                
+                                // On the last item, set state to end immediately so that items are not reloaded since itemsOnSscreen is null
+                                if (this.correctItems.length === 1) {
+                                    this.state = "end";
+                                }
                                 // remove the item from the screen
                                 this.app.set("itemsOnScreen", [...this.itemsOnScreen].filter(i => i.name !== item.name));
                                 // remove the item from the correct items
-                                this.app.set("effect", true);
                                 this.app.set("correctItems", this.correctItems.slice(1));
                                 // if correct items are empty, set the state to end
                                 if (!this.correctItems){
@@ -431,11 +424,14 @@ class BedroomWindow extends SvgPlus {
                     document.getElementsByName("selectButton")[0].style.pointerEvents = "none";
                 }
                 let images = await this.getItemsOnScreen();
-                for (const item of images) {
-                    let itemImg = this.items.createChild(Item, {}, [item, this.editable]);
-                    itemImg.style.pointerEvents = "none";
+                if (images) {
+                    for (const item of images) {
+                        let itemImg = this.items.createChild(Item, {}, [item, this.editable]);
+                        itemImg.style.pointerEvents = "none";
+                    }
+    
                 }
-
+                
                 // this.items.querySelectorAll("img").forEach(item => {
                 //     item.style.pointerEvents = "none";
                 // });
@@ -842,7 +838,6 @@ class LevelScreen extends SvgPlus {
         this.isSender = isSender;
         this.props = {id: "level-screen"};
         this.styles = {
-            "object-fit": "contain",
             "width": "100%",
             "height": "100%",
             "margin-top": "15%",
