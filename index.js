@@ -205,7 +205,10 @@ class BedroomWindow extends SvgPlus {
         this.itemsOnScreen = itemsOnScreen;
       } else {
         console.log("itemsOnScreen is null");
-        console.log("load items on screen:", this.state && this.state !== "end");
+        console.log(
+          "load items on screen:",
+          this.state && this.state !== "end"
+        );
         if (this.state && this.state !== "end") {
           this.itemsOnScreen = itemPositions[this.level];
           this.app.set("itemsOnScreen", this.itemsOnScreen);
@@ -246,7 +249,6 @@ class BedroomWindow extends SvgPlus {
   }
 
   async updateAspectRatio() {
-
     while (true) {
       let parent = this.offsetParent;
       if (parent) {
@@ -394,7 +396,6 @@ class BedroomWindow extends SvgPlus {
         console.log("[setup] itemsOnScreen:", this.itemsOnScreen);
         // Ensure this.correctItems is an array
         for (const item of this.itemsOnScreen) {
-
           let itemImg = this.items.createChild(Item, {}, [item, this.editable]);
 
           if (this.editable) {
@@ -429,13 +430,13 @@ class BedroomWindow extends SvgPlus {
         }
 
         for (const item of this.itemsOnScreen) {
-            // create the items on the screen
+          // create the items on the screen
           let itemImg = this.items.createChild(Item, {}, [item, this.editable]);
 
           if (!this.editable) {
             itemImg.addEventListener("click", () => {
               let currentItem = this.correctItems[0];
-            //   if the selected item is not the correct item, display the error message
+              //  if the selected item is not the correct item, display the error message
               if (item.name !== currentItem) {
                 this.app.set(
                   "prompt",
@@ -474,7 +475,6 @@ class BedroomWindow extends SvgPlus {
         break;
 
       case "end":
-        
         console.log("state=[end]");
         this.items.innerHTML = "";
         this.app.set("prompt", "Congratulations!");
@@ -485,7 +485,7 @@ class BedroomWindow extends SvgPlus {
         }
         let images = await this.getItemsOnScreen();
         if (images) {
-            // disable all the items
+          // disable all the items
           for (const item of images) {
             let itemImg = this.items.createChild(Item, {}, [
               item,
@@ -744,7 +744,7 @@ class MainWindow extends SvgPlus {
 
         homeDiv.styles = { display: "none" };
         if (isSender) {
-            // add the back button on the game screen
+          // add the back button on the game screen
           if (!this.backButton) {
             this.backButton = new BackButton(app);
             this.buttonRow.insertBefore(
