@@ -1,2 +1,2 @@
 # JFC-DEV
-game integration
+Eye'm home app for SQUIDLY platform
